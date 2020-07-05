@@ -3,11 +3,11 @@ package othello
 import kotlin.math.min
 import kotlin.random.Random
 
-class Othello (private val board: List<Int> = IntArray(27){0}.toList() + listOf(-1, 1, 0, 0, 0, 0, 0, 0, 1, -1) + IntArray(27){0}.toList(), private val turn: Int = +1, private val history: List<Othello> = listOf()) {
+class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 0, 0, 0, 0, 0, 1, -1) + List(27) { 0 }, private val turn: Int = +1, private val history: List<Othello> = listOf()) {
 
     companion object {
-        //fill with random bit strings of 64 bits
-        val zobristTable: Array<LongArray> = Array(64) {LongArray(2) {Random.nextLong()} } //TODO: Unique random numbers
+        //fill with random bit strings of 64 bits and pray there are no duplicates (very very low chance)
+        val zobristTable: List<List<Long>> = List(64) {List(2) {Random.nextLong()} } //TODO: Unique random numbers
     }
 
     private val rows = listOf(
@@ -65,38 +65,71 @@ class Othello (private val board: List<Int> = IntArray(27){0}.toList() + listOf(
             listOf(1,8),
             listOf(0)
    )
-    private fun rowsWithPos(pos: Int) = rows.filter { it.contains(pos) }
 
     fun move(pos: Int): Othello {
-        
-        return Othello(board = board.take(pos) + listOf(turn) + board.drop(pos + 1), turn = -turn, history = history.plus(this))
+        assert(isValidMove(pos)) {"Position for the move is invalid"}
+
+        val switchingPositions = mutableSetOf<Int>()
+        switchingPositions.add(pos) //add moving position
+
+        val rowsWithPos =  rows.filter { it.contains(pos) }
+
+        rowsWithPos.forEach {
+            val leftPositions = it.subList(0, it.indexOf(pos)).dropWhile { p -> board[p] != turn }
+            val rightPositions = it.subList(it.indexOf(pos) + 1, it.size).dropLastWhile { p -> board[p] != turn }
+
+            val changingPositions = leftPositions.takeLastWhile { p -> board[p] == -turn } + rightPositions.takeWhile { p -> board[p] == -turn }
+            changingPositions.forEach { p -> switchingPositions.add(p) }
+        }
+
+        return Othello(
+                board = board.mapIndexed { index, i -> if(switchingPositions.contains(index)) turn else i },
+                turn = -turn,
+                history = history.plus(this)
+        )
     }
 
     fun undo() = history.lastOrNull() ?: this
 
-    /*
-    returns a list of all valid moves from the current position
-     */
+    fun switchTurns() = Othello(board = board, turn = -turn, history = history)
+
+    /* returns a list of all valid moves from the current position */
     fun availableMoves() = board.mapIndexedNotNull { index, _ -> if(isValidMove(index)) move(index) else null }
 
-    fun isGameOver() = availableMoves().isEmpty()
+    fun isMoveAvailable() = availableMoves().isNotEmpty()
 
-    fun isValidMove(pos: Int): Boolean {
+    //Game ends when there are no more moves for both players left
+    fun isGameOver() = !isMoveAvailable() && !switchTurns().isMoveAvailable()
+
+    fun isPlayerXTurn() = turn == 1
+
+    fun scorePlayerX() = board.count {it == 1}
+    fun scorePlayerO() = board.count {it == -1}
+
+    private fun isValidMove(pos: Int): Boolean {
+
+        //is the position in the board range?
+        if(pos < 0 || pos >= board.size)
+            return false
 
         //is position already in use?
         if(board[pos] != 0)
             return false
 
+
+
+        val rowsWithPos =  rows.filter { it.contains(pos) }
+
         //are chips with the same color on a row?
-        if(rowsWithPos(pos).none { row -> row.any { board[it] == turn } })
+        if(rowsWithPos.none { row -> row.any { board[it] == turn } })
             return false
 
         //is a chip with the same color and with at least one from the different color between?
-        return rowsWithPos(pos).any { row ->
-            val colorsLeft = row.take(row.indexOf(pos)).map { board[it] }
-            val colorsRight = row.drop(row.indexOf(pos) + 1).map { board[it] }
+        return rowsWithPos.any { row ->
+            val leftPositions = row.take(row.indexOf(pos)).map { board[it] }
+            val rightPositions = row.drop(row.indexOf(pos) + 1).map { board[it] }
 
-            return@any (colorsLeft.contains(turn) && colorsLeft.lastOrNull()?:0 == -turn) || (colorsRight.contains(turn) && colorsRight.firstOrNull()?:0 == -turn)
+            return@any (leftPositions.contains(turn) && leftPositions.lastOrNull() ?: 0 == -turn) || (rightPositions.contains(turn) && rightPositions.firstOrNull() ?: 0 == -turn)
         }
     }
 
@@ -136,9 +169,17 @@ class Othello (private val board: List<Int> = IntArray(27){0}.toList() + listOf(
         ).map { rot -> rot.map {board[it]} }
 
 
-        return (boardRotations + boardReflections).fold(Long.MAX_VALUE) {
+        /*
+        Look for the smallest hashcode
+         */
+        val smallestHashcode =  (boardRotations + boardReflections).fold(Long.MAX_VALUE) {
             minimum, b ->
-            min(minimum, (b.indices).fold(0L) { acc, j ->  if(b[j] != 0) acc xor zobristTable[j][if(b[j] == 1) 0 else 1] else acc})
+            min(minimum, (b.indices).fold(0L) {
+                acc, j ->
+                if(b[j] != 0) acc xor zobristTable[j][if(b[j] == 1) 0 else 1] else acc
+            })
         }
+
+        return smallestHashcode * turn //TODO: Vielleicht kann man die Multiplikation mit 'turn' auch weglassen
     }
 }
