@@ -133,6 +133,11 @@ class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 
         }
     }
 
+    private fun minimax(): Int {
+        TODO("Not yet implemented")
+    }
+
+
     override fun toString(): String {
         var cnt = 1
         val ROW_COL_SIZE = 8
