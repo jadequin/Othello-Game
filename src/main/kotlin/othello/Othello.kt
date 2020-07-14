@@ -1,13 +1,20 @@
 package othello
 
+import kotlin.math.log2
+import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sqrt
+import kotlin.math.sign
 import kotlin.random.Random
+//import MCNode
 
 class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 0, 0, 0, 0, 0, 1, -1) + List(27) { 0 }, private val turn: Int = +1, private val history: List<Othello> = listOf()) {
 
     companion object {
         //fill with random bit strings of 64 bits and pray there are no duplicates (very very low chance)
-        val zobristTable: List<List<Long>> = List(64) {List(2) {Random.nextLong()} } //TODO: Unique random numbers
+        private val zobristTable: List<List<Int>> = List(64) {List(2) {Random.nextInt()} } //TODO: Unique random numbers
+        private val results: HashMap<Othello, Int> = hashMapOf()
+        //val root = MCNode(Othello(), null, Othello().availableMoves().map { MCNode(it, null, null, 0, 0) },0, 0)
     }
 
     private val rows = listOf(
@@ -87,7 +94,10 @@ class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 
                 turn = -turn,
                 history = history.plus(this)
         )
+
     }
+
+    fun bestMove() = availableMoves().reduce { acc, othello -> if(results[othello]!! > results[acc]!!) othello else acc }
 
     fun undo() = history.lastOrNull() ?: this
 
@@ -98,18 +108,23 @@ class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 
 
     fun isMoveAvailable() = availableMoves().isNotEmpty()
 
-    //Game ends when there are no more moves for both players left
-    fun isGameOver() = !isMoveAvailable() && !switchTurns().isMoveAvailable()
+    //Game ends when there is no more space on the board
+    fun isGameOver() = board.none { it == 0}
 
     fun isPlayerXTurn() = turn == 1
 
     fun scorePlayerX() = board.count {it == 1}
     fun scorePlayerO() = board.count {it == -1}
 
+    /*
+    @return 1 if current player wins, -1 if the other player wins and 0 if it's a tie
+     */
+    fun result() = (scorePlayerX() - scorePlayerO()).sign * turn
+
     private fun isValidMove(pos: Int): Boolean {
 
         //is the position in the board range?
-        if(pos < 0 || pos >= board.size)
+        if(pos !in board.indices)
             return false
 
         //is position already in use?
@@ -133,8 +148,111 @@ class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 
         }
     }
 
-    private fun minimax(): Int {
-        TODO("Not yet implemented")
+//    fun monteCarloResult(): Double {
+//
+//        val nextValidBoard = { othello: Othello -> if(!othello.isMoveAvailable()) othello.switchTurns().availableMoves() else othello.availableMoves()}
+//        fun ucb1(node: MCNode): Double {
+//            try {
+//                return node.t / node.n + 2 * sqrt(log2(root.n.toDouble()) / node.n)
+//            } catch (ae: ArithmeticException) {
+//                return 0.0
+//            }
+//
+//        }
+//
+//
+//        var current = root
+//
+//        //SELECTION
+//        while(current.children != null) {
+//            current = current.children!!.reduce { acc, mcNode ->  if(ucb1(mcNode) > ucb1(acc)) mcNode else acc }
+//        }
+//
+//        if(current.n == 0) {
+//            //ROLLOUT
+//            var currentBoard: Othello = current.b
+//            while(!currentBoard.isGameOver()) {
+//                if(!currentBoard.isMoveAvailable())
+//                    currentBoard = currentBoard.switchTurns()
+//
+//                currentBoard = currentBoard.availableMoves().random()
+//            }
+//            val rolloutResult = if(currentBoard.result() == 1) 1 else 0 //TODO: Muss 0 oder 1 sein!!!
+//
+//            //UPDATE
+//            while(current.parent != null) {
+//                current.t += rolloutResult
+//                current.n++
+//                root.n ++
+//                current = current.parent!!
+//            }
+//            current.t += rolloutResult
+//            current.n++
+//            root.n ++
+//            root.t += rolloutResult
+//        }
+//        else
+//        {
+//            //EXPAND
+//            current.children = nextValidBoard(current.b).map { MCNode(it, current, null, 0, 0) }
+//            current = current.children!!.first()
+//
+//            //ROLLOUT
+//            var currentBoard: Othello = current.b
+//            while(!currentBoard.isGameOver()) {
+//                if(!currentBoard.isMoveAvailable())
+//                    currentBoard = currentBoard.switchTurns()
+//
+//                currentBoard = currentBoard.availableMoves().random()
+//            }
+//            val rolloutResult = currentBoard.result()
+//
+//            //UPDATE
+//            while(current.parent != null) {
+//                current.t += rolloutResult
+//                current.n++
+//                root.n ++
+//                current = current.parent!!
+//            }
+//            current.t += rolloutResult
+//            current.n++
+//            root.n ++
+//            root.t += rolloutResult
+//        }
+//
+//        return root.t.toDouble() / root.n
+//    }
+
+    fun minimax(depth: Int = 5, alpha: Int = -Int.MAX_VALUE, beta: Int = Int.MAX_VALUE): Int {
+        if(results[this] != null)
+            return results[this]!! * -turn
+
+        if(isGameOver())
+            return result()
+
+        if(!isMoveAvailable())
+            return switchTurns().minimax(depth, alpha, beta)
+
+        //from now on: Monte-Carlo-Tree-Search
+//        if(depth == 0)
+//            return availableMoves().fold(-Int.MAX_VALUE) {
+//                acc, othello ->
+//                max(acc, (othello.monteCarloResult()).toInt())
+//            }
+
+        //alpha-beta-implementation combined with negamax
+        val bestScore = run {
+            availableMoves().fold(alpha) {
+                bestScore, move ->
+                val score = -move.minimax(depth - 1, -beta, -bestScore)
+                if(bestScore in beta until score)
+                    return@run bestScore
+                max(bestScore, score)
+            }
+        }
+
+        results[this] = bestScore * -turn
+        return bestScore
     }
 
 
@@ -152,18 +270,17 @@ class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        return if(other is Othello) other.zobristHashCode() == this.zobristHashCode() else false
+        return other.hashCode() == this.hashCode()
     }
 
-
     //https://en.wikipedia.org/wiki/Zobrist_hashing
-    fun zobristHashCode(): Long {
+    override fun hashCode(): Int {
 
         val boardRotations = listOf(
-            listOf(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63),
-            listOf(7,15,23,31,39,47,55,63,6,14,22,30,38,46,54,62,5,13,21,29,37,45,53,61,4,12,20,28,36,44,52,60,3,11,19,27,35,43,51,59,2,10,18,26,34,42,50,58,1,9,17,25,33,41,49,57,0,8,16,24,32,40,48,56),
-            listOf(63,62,61,60,59,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0),
-            listOf(56,48,40,32,24,16,8,0,57,49,41,33,25,17,9,1,58,50,42,34,26,18,10,2,59,51,43,35,27,19,11,3,60,52,44,36,28,20,12,4,61,53,45,37,29,21,13,5,62,54,46,38,30,22,14,6,63,55,47,39,31,23,15,7)
+                listOf(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63),
+                listOf(7,15,23,31,39,47,55,63,6,14,22,30,38,46,54,62,5,13,21,29,37,45,53,61,4,12,20,28,36,44,52,60,3,11,19,27,35,43,51,59,2,10,18,26,34,42,50,58,1,9,17,25,33,41,49,57,0,8,16,24,32,40,48,56),
+                listOf(63,62,61,60,59,58,57,56,55,54,53,52,51,50,49,48,47,46,45,44,43,42,41,40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0),
+                listOf(56,48,40,32,24,16,8,0,57,49,41,33,25,17,9,1,58,50,42,34,26,18,10,2,59,51,43,35,27,19,11,3,60,52,44,36,28,20,12,4,61,53,45,37,29,21,13,5,62,54,46,38,30,22,14,6,63,55,47,39,31,23,15,7)
         ).map { rot -> rot.map {board[it]} }
 
         val boardReflections = listOf(
@@ -177,9 +294,9 @@ class Othello (private val board: List<Int> = List(27) { 0 } + listOf(-1, 1, 0, 
         /*
         Look for the smallest hashcode
          */
-        val smallestHashcode =  (boardRotations + boardReflections).fold(Long.MAX_VALUE) {
+        val smallestHashcode =  (boardRotations + boardReflections).fold(Int.MAX_VALUE) {
             minimum, b ->
-            min(minimum, (b.indices).fold(0L) {
+            min(minimum, (b.indices).fold(0) {
                 acc, j ->
                 if(b[j] != 0) acc xor zobristTable[j][if(b[j] == 1) 0 else 1] else acc
             })

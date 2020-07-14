@@ -32,6 +32,10 @@ dependencies {
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
+run {
+    standardInput = System.in
+}
+
 application {
     // Define the main class for the application.
     mainClassName = 'othello.AppKt'
