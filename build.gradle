@@ -30,6 +30,13 @@ dependencies {
 
     // Use the Kotlin JUnit integration.
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
+
+    // https://mvnrepository.com/artifact/io.javalin/javalin
+    compile group: 'io.javalin', name: 'javalin', version: '3.9.0'
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    compile "org.slf4j:slf4j-simple:1.7.28"
+
 }
 
 run {
