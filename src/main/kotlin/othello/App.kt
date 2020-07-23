@@ -7,7 +7,9 @@ fun main() {
 
     var o = Othello()
 
-
+    (0..63).forEach { println(o.flips(it)) }
+    println()
+    println(o.listMoves().size)
 
     while(!o.isGameOver()) {
         o = o.nextTurn()
