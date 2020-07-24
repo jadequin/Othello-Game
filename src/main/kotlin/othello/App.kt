@@ -6,10 +6,7 @@ import io.javalin.Javalin
 fun main() {
 
     var o = Othello()
-
-    (0..63).forEach { println(o.flips(it)) }
-    println()
-    println(o.listMoves().size)
+    (0..63).forEach { if(o.isValidMove(it)) println(it) }
 
     while(!o.isGameOver()) {
         o = o.nextTurn()
