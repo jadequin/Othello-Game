@@ -28,7 +28,13 @@
             background: rgba(22, 129, 13, 0.87);
             border: 1px solid black;
         }
-        .square:hover {
+        .suggestionSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(22, 129, 13, 0.87);
+            border: 1px solid black;
+        }
+        .suggestionSquare:hover {
             background-image: url("black-circle.png");
             background-repeat: no-repeat; /* Do not repeat the image */
             background-position: center; /* Center the image */
@@ -128,9 +134,16 @@
     </table>
 </div>
 
+<div class="ui">
+
+</div>
+
 
 <script>
     let http = new XMLHttpRequest();
+
+    //initial game state call
+    sendGET("state")
 
     //SENDER
     function sendGET(request) {

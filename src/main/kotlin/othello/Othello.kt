@@ -163,6 +163,15 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
                     freeSpace = freeSpace - 1
             ) }
 
+    fun makeMove(pos: Int) = Othello(
+            players = if(turn == 1)
+                listOf(players[0] or flips(pos) or (1L shl pos), players[1] and flips(pos).inv())
+            else
+                listOf(players[0] and flips(pos).inv(), players[1] or flips(pos) or (1L shl pos)),
+            turn = -turn,
+            prevOthello = this,
+            freeSpace = freeSpace - 1
+    )
 
 
 
@@ -287,7 +296,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
             return (0..63).joinToString(separator = "", prefix = "<table>", postfix = "</table>") {
                 (if(it%8==0 && it != 0) "</tr>" else "") +
                         (if(it%8==0) "<tr class='row'>" else "") +
-                        "<td class='square' id='${it/8}_${it%8}' " +
+                        "<td class=${if(isValidMove(it)) "'suggestionSquare' onclick='sendGET(\"makeMove?move=$it\")' style=':hover{background-image: url(\"${if (currentPos(it) && turn == 1) "black" else "white"}-circle.png\"); background-repeat: no-repeat;background-position: center; background-size: cover;}' " else "'square'"} id='${it/8}_${it%8}' " +
                         (if(boardPos(it)) " style='background-image: url(\"${if(currentPos(it) && turn == 1) "black" else "white"}-circle.png\"); background-repeat: no-repeat;background-position: center; background-size: cover;'" else "") +
                         "></td>"
 
