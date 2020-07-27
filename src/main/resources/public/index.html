@@ -22,19 +22,52 @@
             padding: 1.5rem;
         }
 
+
         .square {
             width: 90px;
             height: 73px;
             background: rgba(22, 129, 13, 0.87);
             border: 1px solid black;
         }
-        .suggestionSquare {
+        .whiteSquare {
             width: 90px;
             height: 73px;
             background: rgba(22, 129, 13, 0.87);
             border: 1px solid black;
+            background-image: url("white-circle.png");
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-position: center; /* Center the image */
+            background-size: cover; /* Resize the background image to cover the entire container */
         }
-        .suggestionSquare:hover {
+        .blackSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(22, 129, 13, 0.87);
+            border: 1px solid black;
+            background-image: url("black-circle.png");
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-position: center; /* Center the image */
+            background-size: cover; /* Resize the background image to cover the entire container */
+        }
+        .whiteSuggSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(84, 220, 72, 0.87);
+            border: 1px solid black;
+        }
+        .whiteSuggSquare:hover {
+            background-image: url("white-circle.png");
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-position: center; /* Center the image */
+            background-size: cover; /* Resize the background image to cover the entire container */
+        }
+        .blackSuggSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(84, 220, 72, 0.87);
+            border: 1px solid black;
+        }
+        .blackSuggSquare:hover {
             background-image: url("black-circle.png");
             background-repeat: no-repeat; /* Do not repeat the image */
             background-position: center; /* Center the image */
@@ -134,9 +167,25 @@
     </table>
 </div>
 
-<div class="ui">
 
-</div>
+Player 1:
+<input type="radio" id="p1Computer" name="first" value="com">
+<label for="p1Computer">Computer</label>
+<input type="radio" id="p1Human" name="first" value="human" checked>
+<label for="p1Human">Human</label>
+<br>
+<br>
+Player 2:
+<input type="radio" id="p2Computer" name="second" value="com" checked>
+<label for="p2Computer">Computer</label>
+<input type="radio" id="p2Human" name="second" value="human">
+<label for="p2Human">Human</label>
+<br><br>
+<button onclick="sendGET('newGame?first=' + document.querySelector('input[name=first]:checked').value + '&second=' + document.querySelector('input[name=second]:checked').value)">New Game</button>
+<br><br><br><br>
+<button onclick="sendGET('bestMove')">Best Move</button>
+<br><br>
+<button onclick="sendGET('undo')">Undo</button>
 
 
 <script>

@@ -25,11 +25,13 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
     //TODO: Muss hier minBy oder maxBy verwendet werden?
     fun bestMove(): Othello {
         var countMoves = 0.0;
-        return listMoves().minBy {
+        return listMoves().maxBy {
             print("${((countMoves++ / countValidMoves()) * 100).toInt()}%\r");
-            return@minBy it.monteCarloResult()
+            return@maxBy it.monteCarloResult()
         }!!
     }
+
+    fun randomMove() = if(isGameOver()) this else nextTurn().listMoves().random()
 
     fun undo(times: Int = 1): Othello = if(prevOthello == null || times == 0) this else prevOthello.undo(times - 1)
 
@@ -189,7 +191,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
         this
 
     //alpha beta with side effects on hash table
-    fun alphaBeta(depth: Int = DEPTH, alpha: Int = Int.MAX_VALUE * -turn, beta: Int = Int.MAX_VALUE * turn): Int {
+    fun alphaBeta(depth: Int = DEPTH, alpha: Int = -Int.MAX_VALUE, beta: Int = Int.MAX_VALUE): Int {
 
         if(results[this] != null)
             return results[this]!! * (depth + 1)
@@ -296,10 +298,24 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
             return (0..63).joinToString(separator = "", prefix = "<table>", postfix = "</table>") {
                 (if(it%8==0 && it != 0) "</tr>" else "") +
                         (if(it%8==0) "<tr class='row'>" else "") +
-                        "<td class=${if(isValidMove(it)) "'suggestionSquare' onclick='sendGET(\"makeMove?move=$it\")' style=':hover{background-image: url(\"${if (currentPos(it) && turn == 1) "black" else "white"}-circle.png\"); background-repeat: no-repeat;background-position: center; background-size: cover;}' " else "'square'"} id='${it/8}_${it%8}' " +
-                        (if(boardPos(it)) " style='background-image: url(\"${if(currentPos(it) && turn == 1) "black" else "white"}-circle.png\"); background-repeat: no-repeat;background-position: center; background-size: cover;'" else "") +
-                        "></td>"
+                        "<td class='" +
+                        (if(isValidMove(it))
+                            (if(turn == 1)
+                                "blackSuggSquare' onclick='sendGET(\"makeMove?move=$it\")"
+                            else
+                                "whiteSuggSquare' onclick='sendGET(\"makeMove?move=$it\")" )
+                        else if(currentPos(it) && turn == 1)
+                            "blackSquare"
+                        else if(currentPos(it) && turn == -1)
+                            "whiteSquare"
+                        else if(otherPos(it) && turn == 1)
+                            "whiteSquare"
+                        else if(otherPos(it) && turn == -1)
+                            "blackSquare"
+                        else
+                            "square") +
 
+                        "' id='${it/8}_${it%8}'></td>"
             }
 
     }
