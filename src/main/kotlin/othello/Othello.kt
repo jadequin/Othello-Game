@@ -24,9 +24,9 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
     //TODO: Muss hier minBy oder maxBy verwendet werden?
     fun bestMove(): Othello {
-        var countMoves = 0.0;
+        var countMoves = 0.0
         return listMoves().maxBy {
-            print("${((countMoves++ / countValidMoves()) * 100).toInt()}%\r");
+            print("${((countMoves++ / countValidMoves()) * 100).toInt()}%\r")
             return@maxBy it.monteCarloResult()
         }!!
     }
@@ -50,11 +50,11 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
     fun isPlayerXTurn() = turn == 1
 
-    fun scorePlayerX() = (0..63).count { players[0] and (1L shl it) != 0L }
-    fun scorePlayerO() = (0..63).count { players[1] and (1L shl it) != 0L }
+    fun scorePlayer1() = (0..63).count { players[0] and (1L shl it) != 0L }
+    fun scorePlayer2() = (0..63).count { players[1] and (1L shl it) != 0L }
 
 
-    fun result() = (scorePlayerX() - scorePlayerO()).sign * turn
+    fun result() = (scorePlayer1() - scorePlayer2()).sign * turn
 
     fun flips(pos: Int): Long {
         var flips = 0L
@@ -288,13 +288,21 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
         return other.turn == this.turn && other.hashValPlayer1() == this.hashValPlayer1() && other.hashValPlayer2() == this.hashValPlayer2()
     }
 
-//    override fun toString(): String {
-//        return (0..63).joinToString(prefix = "-".repeat(17) + "\n|", postfix = "|\n" + "-".repeat(17), separator = "|") {
-//            (if(it != 0 && it%8==0) "\n|" else "") + (if(players[0] shr it and 1L == 1L) "X" else if(players[1] shr it and 1L == 1L) "O" else " ")
-//        }
-//    }
-
     override fun toString(): String {
+        return (0..63).joinToString(prefix = "-".repeat(17) + "\n|", postfix = "|\n" + "-".repeat(17), separator = "|") {
+            (if(it != 0 && it%8==0) "\n|" else "") + (if(players[0] shr it and 1L == 1L) "X" else if(players[1] shr it and 1L == 1L) "O" else " ")
+        }
+    }
+
+    /*
+    Html Response with the following form:
+        boardAsHTML###turn###scorePlayer1###scorePlayer2###isGameOver
+
+    example:
+        <table>...</table###-1###23###41###true
+
+     */
+    fun htmlResponse(): String {
             return (0..63).joinToString(separator = "", prefix = "<table>", postfix = "</table>") {
                 (if(it%8==0 && it != 0) "</tr>" else "") +
                         (if(it%8==0) "<tr class='row'>" else "") +
@@ -316,7 +324,16 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
                             "square") +
 
                         "' id='${it/8}_${it%8}'></td>"
-            }
+            } +
+                    "###" +
+                    turn +
+                    "###" +
+                    scorePlayer1() +
+                    "###" +
+                    scorePlayer2() +
+                    "###" +
+                    isGameOver()
+
 
     }
 }

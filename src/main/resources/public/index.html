@@ -186,6 +186,8 @@ Player 2:
 <button onclick="sendGET('bestMove')">Best Move</button>
 <br><br>
 <button onclick="sendGET('undo')">Undo</button>
+<br><br>
+<button onclick="sendGET('randomMove')">Random Move</button>
 
 
 <script>
@@ -202,8 +204,12 @@ Player 2:
 
     //RECEIVER
     http.onload = function() {
-        if (status == 0 || (status >= 200 && status < 400))
-            document.getElementById('game').innerHTML = this.responseText
+        if (status == 0 || (status >= 200 && status < 400)) {
+            let elements = this.responseText.split("###")
+
+            document.getElementById('game').innerHTML = elements[0]
+        }
+
     }
 </script>
 </body>
