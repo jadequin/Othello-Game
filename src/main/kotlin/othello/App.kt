@@ -36,12 +36,13 @@ class App(var game: Game = Game()) {
 
         app.get("/makeMove"){ ctx ->
             val pos: Int = ctx.queryParam("move")!!.toInt()
-            game.othello = game.othello.makeMove(pos)
-            ctx.result(game.othello.htmlResponse())
+            if(!game.othello.isGameOver())
+                game.othello = game.othello.makeMove(pos)
+            ctx.result(game.othello.nextTurn().htmlResponse())
         }
 
         app.get("/state"){ ctx ->
-            ctx.result(game.othello.htmlResponse())
+            ctx.result(game.othello.nextTurn().htmlResponse())
         }
 
         app.get("/newGame") { ctx ->
@@ -49,22 +50,24 @@ class App(var game: Game = Game()) {
             val p2IsCom = ctx.queryParam("second")?:"" == "com"
 
             game = Game(Othello(), p1IsCom, p2IsCom)
-            ctx.result( game.othello.htmlResponse())
+            ctx.result( game.othello.nextTurn().htmlResponse())
         }
 
         app.get("/undo") {ctx ->
             game.othello = game.othello.undo()
-            ctx.result(game.othello.htmlResponse())
+            ctx.result(game.othello.nextTurn().htmlResponse())
         }
 
         app.get("/bestMove") { ctx ->
-            game.othello = game.othello.bestMove()
-            ctx.result( game.othello.htmlResponse())
+            if(!game.othello.isGameOver())
+                game.othello = game.othello.bestMove()
+            ctx.result( game.othello.nextTurn().htmlResponse())
         }
 
         app.get("/randomMove") {ctx ->
-            game.othello = game.othello.nextTurn().randomMove()
-            ctx.result(game.othello.htmlResponse())
+            if(!game.othello.isGameOver())
+                game.othello = game.othello.nextTurn().randomMove()
+            ctx.result(game.othello.nextTurn().htmlResponse())
         }
     }
 }

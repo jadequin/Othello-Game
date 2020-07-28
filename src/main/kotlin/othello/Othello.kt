@@ -22,7 +22,6 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
     fun board() = players[0] or players[1]
 
-    //TODO: Muss hier minBy oder maxBy verwendet werden?
     fun bestMove(): Othello {
         var countMoves = 0.0
         return listMoves().maxBy {
@@ -56,7 +55,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
     fun result() = (scorePlayer1() - scorePlayer2()).sign * turn
 
-    fun flips(pos: Int): Long {
+    private fun flips(pos: Int): Long {
         var flips = 0L
 
         //left
@@ -296,16 +295,16 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
     /*
     Html Response with the following form:
-        boardAsHTML###turn###scorePlayer1###scorePlayer2###isGameOver
+        boardAsHTML###turn###scorePlayer1###scorePlayer2###result
 
     example:
-        <table>...</table###-1###23###41###true
+        <table>...</table###-1###23###41###0
 
      */
     fun htmlResponse(): String {
             return (0..63).joinToString(separator = "", prefix = "<table>", postfix = "</table>") {
                 (if(it%8==0 && it != 0) "</tr>" else "") +
-                        (if(it%8==0) "<tr class='row'>" else "") +
+                        (if(it%8==0) "<tr>" else "") +
                         "<td class='" +
                         (if(isValidMove(it))
                             (if(turn == 1)
@@ -323,7 +322,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
                         else
                             "square") +
 
-                        "' id='${it/8}_${it%8}'></td>"
+                        "'></td>"
             } +
                     "###" +
                     turn +
@@ -332,7 +331,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
                     "###" +
                     scorePlayer2() +
                     "###" +
-                    isGameOver()
+                    if(isGameOver()) result() * turn else "nowin"
 
 
     }
