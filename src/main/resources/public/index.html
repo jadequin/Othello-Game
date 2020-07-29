@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .game {
+            position: absolute;
+            top: 4rem;
+            left: 50%;
+            transform: translate(-50%);
+            width: 650px;
+            height: 650px;
+            background: rgb(92, 75, 39);
+            border: 1px solid black;
+            box-shadow: 5px 5px rgba(4, 10, 4, 0.87);
+            padding: 1.5rem;
+        }
+
+
+        .square {
+            width: 90px;
+            height: 73px;
+            background: rgba(22, 129, 13, 0.87);
+            border: 1px solid black;
+        }
+        .whiteSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(22, 129, 13, 0.87);
+            border: 1px solid black;
+            background-image: url("white-circle.png");
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-position: center; /* Center the image */
+            background-size: cover; /* Resize the background image to cover the entire container */
+        }
+        .blackSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(22, 129, 13, 0.87);
+            border: 1px solid black;
+            background-image: url("black-circle.png");
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-position: center; /* Center the image */
+            background-size: cover; /* Resize the background image to cover the entire container */
+        }
+        .whiteSuggSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(84, 220, 72, 0.87);
+            border: 1px solid black;
+        }
+        .whiteSuggSquare:hover {
+            background-image: url("white-circle.png");
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-position: center; /* Center the image */
+            background-size: cover; /* Resize the background image to cover the entire container */
+        }
+        .blackSuggSquare {
+            width: 90px;
+            height: 73px;
+            background: rgba(84, 220, 72, 0.87);
+            border: 1px solid black;
+        }
+        .blackSuggSquare:hover {
+            background-image: url("black-circle.png");
+            background-repeat: no-repeat; /* Do not repeat the image */
+            background-position: center; /* Center the image */
+            background-size: cover; /* Resize the background image to cover the entire container */
+        }
+
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Othello</title>
+</head>
+<body>
+<div style="text-align: center;"><h1>Othello</h1></div>
+
+
+<div class="game" id="game" style="pointer-events: all">
+    <table>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+        <tr>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+            <td class="square"></td>
+        </tr>
+    </table>
+</div>
+
+<!--- Option buttons for new game --->
+Player 1:
+<input type="radio" id="p1Computer" name="first" onclick="sendGET('state')">
+<label for="p1Computer">Computer</label>
+<input type="radio" id="p1Human" name="first" onclick="sendGET('state')" checked>
+<label for="p1Human">Human</label>
+<input type="radio" id="p1Random" name="first" onclick="sendGET('state')">
+<label for="p1Random">Random</label>
+<br>
+<br>
+Player 2:
+<input type="radio" id="p2Computer" name="second" onclick="sendGET('state')" checked>
+<label for="p2Computer">Computer</label>
+<input type="radio" id="p2Human" name="second" onclick="sendGET('state')">
+<label for="p2Human">Human</label>
+<input type="radio" id="p2Random" name="second" onclick="sendGET('state')">
+<label for="p2Random">Random</label>
+
+<!--- Buttons --->
+<br><br>
+<button onclick="sendGET('newGame')">New Game</button>
+<br><br><br><br>
+<button onclick="sendGET('bestMove')">Best Move</button>
+<br><br>
+<button onclick="sendGET('randomMove')">Random Move</button>
+<br><br>
+<button onclick="sendGET('undo')">Undo</button>
+
+
+<br><br>
+
+<!--- Some information about the game state --->
+Score P1: <label id="scoreP1">0</label>
+<br>
+Score P2: <label id="scoreP2">0</label>
+<br><br>
+Turn: <label id="turn"></label>
+<br><br>
+<label id="win"></label>
+
+
+<script>
+    let http = new XMLHttpRequest();
+
+    //initial game state call
+    sendGET("state")
+
+    //SENDER
+    function sendGET(request) {
+        http.open('GET', request);
+        http.send();
+    }
+
+    //RECEIVER
+    http.onload = function() {
+        if (status == 0 || (status >= 200 && status < 400)) {
+            /*
+            Html Response with the following form:
+                boardAsHTML###turn###scorePlayer1###scorePlayer2###result
+
+            example:
+                <table>...</table###-1###23###41###0
+
+             */
+            let elements = this.responseText.split("###")
+
+            document.getElementById('game').innerHTML = elements[0]
+            document.getElementById('turn').innerText = elements[1] === '1' ? "P1" : "P2"
+            document.getElementById('scoreP1').innerText = elements[2]
+            document.getElementById('scoreP2').innerText = elements[3]
+            document.getElementById('win').innerText = elements[4] === '1'? 'Player 1 Wins!!!' : elements[4] === '-1'? 'Player 2 Wins!!!' : elements[4] === '0'? 'Tie !' : ""
+
+            let isP1Turn = elements[1] === '1'
+            let isGameOver = elements[4] !== 'nowin'
+
+            //activate click events for the game board
+            document.getElementById('game').style.pointerEvents="all"
+
+            //check if there are automatic moves to be made
+            if(!isGameOver && ((isP1Turn && document.getElementById('p1Computer').checked) || (!isP1Turn && document.getElementById('p2Computer').checked))) {
+                document.getElementById('game').style.pointerEvents="none"
+                setTimeout(() => { sendGET('bestMove') }, 650); //delay the request
+            }
+            else if(!isGameOver && ((isP1Turn && document.getElementById('p1Random').checked) || (!isP1Turn && document.getElementById('p2Random').checked))) {
+                document.getElementById('game').style.pointerEvents="none"
+                setTimeout(() => { sendGET('randomMove') }, 650); //delay the request
+            }
+        }
+    }
+
+    function sendMove(request) {
+        sendGET(request)
+
+    }
+</script>
+</body>
+</html>
