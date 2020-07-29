@@ -1,4 +1,4 @@
-# <Spielbezeichnung> (PiS, SoSe 2020) 
+# Othello (PiS, SoSe 2020) 
 
 Autor: Till Nitsche, 5197769
 

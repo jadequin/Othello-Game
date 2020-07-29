@@ -74,7 +74,7 @@ fun test1() {
 
     //o is a tie now
     println("Tied up game state:")
-    o = o.undo(2)
+    o = o.undo().undo()
     println(o)
     println((if(o.isPlayer1Turn()) "P1" else "P2") + " turn")
     println("(${o.scorePlayer1()}|${o.scorePlayer2()})")

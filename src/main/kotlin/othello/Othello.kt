@@ -6,76 +6,210 @@ import kotlin.math.sign
 
 //http://mnemstudio.org/game-reversi-example-2.htm
 
-class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), private val turn: Int = +1, private val prevOthello: Othello? = null, private val freeSpace: Int = 60) {
+class Othello (private val players: List<Long> = listOf(34628173824L, 68853694464L), private val turn: Int = +1, private val prevOthello: Othello? = null): OthelloGame {
 
 
     companion object {
-        private const val DEPTH = 3
-        private const val MC_SEARCHES = 200
+        private const val DEPTH = 4
+        val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
+
+        //Sorted indices by value for earlier cut offs
+        val ratingIndicesSortedDesc = ratings.indices.sortedByDescending { ratings[it] }
 
         val results = hashMapOf<Othello, Int>()
 
-        fun of(p1Pos: List<Int>, p2Pos: List<Int>, turn: Int): Othello {
-            val freeSpace = 64 - (p1Pos.size + p2Pos.size)
-            val p1 = p1Pos.fold(0L) { acc, i -> acc or (1L shl i) }
-            val p2 = p1Pos.fold(0L) { acc, i -> acc or (1L shl i) }
-
-            return Othello(listOf(p1, p2), turn, null, freeSpace )
-        }
     }
 
-    val boardPos = {pos: Int -> board() and (1L shl pos) != 0L}
-    val currentPos = {pos: Int -> players[(-turn + 1).sign] and (1L shl pos) != 0L}
-    val otherPos = {pos: Int -> players[(turn + 1).sign] and (1L shl pos) != 0L}
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  BOARD SHIFTERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-    fun board() = players[0] or players[1]
+    private val boardPos = { pos: Int -> board() and (1L shl pos) != 0L}
+    private val currentPos = { pos: Int -> players[(-turn + 1).sign] and (1L shl pos) != 0L}
+    private val otherPos = {pos: Int -> players[(turn + 1).sign] and (1L shl pos) != 0L}
 
-    fun bestMove(): Othello {
-        return listMoves().maxBy { it.alphaBeta() }!!
-//        var countMoves = 0.0
-//        return listMoves().maxBy {
-//            print("${((countMoves++ / countValidMoves()) * 100).toInt()}%\r")
-//            return@maxBy it.monteCarloResult()
-//        }!!
-    }
+    private fun board() = players[0] or players[1]
+
+
+
+
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  MOVE GENERATING METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    override fun listMoves() = ratingIndicesSortedDesc.mapNotNull {
+        val mask = flips(it)
+        if(mask == 0L || boardPos(it))
+            return@mapNotNull null
+        else
+            return@mapNotNull Othello(
+                    players = if(turn == 1)
+                        listOf(players[0] or mask or (1L shl it), players[1] and mask.inv())
+                    else
+                        listOf(players[0] and mask.inv(), players[1] or mask or (1L shl it)),
+                    turn = -turn,
+                    prevOthello = this
+            ) }
+
+    override fun makeMove(pos: Int) = Othello(
+            players = if(turn == 1)
+                listOf(players[0] or flips(pos) or (1L shl pos), players[1] and flips(pos).inv())
+            else
+                listOf(players[0] and flips(pos).inv(), players[1] or flips(pos) or (1L shl pos)),
+            turn = -turn,
+            prevOthello = this
+    )
+
+    fun bestMove(): Othello = listMoves().maxBy { it.alphaBeta() }!!
 
     fun randomMove() = if(isGameOver()) this else nextTurn().listMoves().random()
 
-    fun undo(times: Int = 1): Othello = if(prevOthello == null || times == 0) this else prevOthello.undo(times - 1)
+    override fun undo(): Othello = if(prevOthello == null) this else prevOthello
 
     fun nextTurn() = if (!isMoveAvailable()) switchTurns() else this
 
-    fun switchTurns() = Othello(players, -turn, prevOthello, freeSpace)
+    override fun switchTurns() = Othello(players, -turn, prevOthello)
 
-    fun isMoveAvailable() = (0..63).any { isValidMove(it) }
+    private fun flips(pos: Int): Long {
+        var flips = 0L
+        //left
+        if(pos%8 > 1 && otherPos(pos-1))
+            for(i in pos-2 downTo (pos/8)*8) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (i + 1 until pos).forEach { flips = flips or (1L shl it) }
+                    break
+                }
+            }
+        //right
+        if(pos%8 < 6 && otherPos(pos+1))
+            for(i in pos+2 .. (pos/8)*8+7) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (pos+1 until i).forEach { flips = flips or (1L shl it) }
+                    break
+                }
+            }
 
-    fun isValidMove(pos: Int) = !boardPos(pos) && flips(pos) != 0L
+        //up
+        if(pos > 15 && otherPos(pos-8))
+            for(i in pos-16 downTo pos%8 step 8) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (i+8..pos-8 step 8).forEach { flips = flips or (1L shl it) }
+                    break
+                }
+            }
 
-    fun countValidMoves() = (0..63).count { isValidMove(it) }
+        //down
+        if(pos < 48 && otherPos(pos+8))
+            for(i in pos+16 .. pos%8+56 step 8) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (pos+8..i-8 step 8).forEach { flips = flips or (1L shl it) }
+                    break
+                }
+            }
 
-    //Game ends when there are no more moves left for both players
-    fun isGameOver() = !nextTurn().isMoveAvailable()
+        //diagonal /up
+        if(pos/8 > 1 && pos%8 < 6 && otherPos(pos-7))
+        {
+            var i = pos-14
+            while(i > 7 && i%8 < 7) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (i+7..pos-7 step 7).forEach {flips = flips or (1L shl it) }
+                    break
+                }
+                i -=7
+            }
+        }
 
-    fun isPlayer1Turn() = turn == 1
+        //diagonal \up
+        if(pos/8 > 1 && pos%8 > 1 && otherPos(pos-9))
+        {
+            var i = pos-18
+            while(i > 7 && i%8 > 0) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (i+9..pos-9 step 9).forEach { flips = flips or (1L shl it)}
+                    break
+                }
+                i -= 9
+            }
+        }
 
-    fun scorePlayer1() = (0..63).count { players[0] and (1L shl it) != 0L }
-    fun scorePlayer2() = (0..63).count { players[1] and (1L shl it) != 0L }
+        //diagonal /down
+        if(pos/8 < 6 && pos%8 > 1 && otherPos(pos+7))
+        {
+            var i = pos+14
+            while(i < 56 && i%8 > 0) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (pos+7..i-7 step 7).forEach { flips = flips or (1L shl it)}
+                    break
+                }
+                i += 7
+            }
+        }
 
-    fun result(): Int {
-        return (scorePlayer1() - scorePlayer2()).sign
+        //diagonal \down
+        if(pos/8 <6 && pos%8 <6 && otherPos(pos+9))
+        {
+            var i = pos+18
+            while(i < 56 && i%8 < 7) {
+                if(!boardPos(i))
+                    break
+                if(currentPos(i)) {
+                    (pos+9..i-9 step 9).forEach { flips = flips or (1L shl it) }
+                    break
+                }
+                i += 9
+            }
+        }
+
+        return flips
     }
 
-    fun dynamicHeuristic(): Int {
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  VALIDATION METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    private fun isMoveAvailable() = (0..63).any { isValidMove(it) }
+
+    private fun isValidMove(pos: Int) = !boardPos(pos) && flips(pos) != 0L
+
+    private fun countValidMoves() = (0..63).count { isValidMove(it) }
+
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  GAME STATUS METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    //Game ends when there are no more moves left for both players
+    override fun isGameOver() = !nextTurn().isMoveAvailable()
+
+    override fun isPlayer1Turn() = turn == 1
+
+    override fun scorePlayer1() = (0..63).count { players[0] and (1L shl it) != 0L }
+    override fun scorePlayer2() = (0..63).count { players[1] and (1L shl it) != 0L }
+
+    //returns 1 if player1 has more disc, -1 if it is player2 or 0 if it is a tie
+    override fun result() = (scorePlayer1() - scorePlayer2()).sign
+
+
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  GAME HEURISTICS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+    private fun dynamicHeuristic(): Int {
         //1:Coin Parity + 2:Mobility + 3:Corners captured + 4:Stability
-        val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
         val corners = listOf(0, 7, 56, 63)
         val cornerCloseness = listOf(1,8,9, 6,14,15, 48,49,57, 54,55,62)
 
 
-
         val cornerVal = 25 * (corners.count { currentPos(it) } - corners.count { otherPos(it) })
 
-        val cornerClosenessVal = -12.5 * (cornerCloseness.count { !boardPos(corners[it%3]) && currentPos(it) } - cornerCloseness.count { !boardPos(corners[it%3]) && otherPos(it) })
+        val cornerClosenessVal = -12.5 * (cornerCloseness.indices.count { !boardPos(corners[it/3]) && currentPos(cornerCloseness[it]) } - cornerCloseness.indices.count { !boardPos(corners[it/3]) && otherPos(cornerCloseness[it]) })
 
         val myMobility = this.countValidMoves()
         val oppMobility = switchTurns().countValidMoves()
@@ -91,152 +225,10 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
     }
 
-    private fun flips(pos: Int): Long {
-        var flips = 0L
-
-        //left
-        if(pos%8 > 1 && otherPos(pos-1))
-            for(i in pos-2 downTo (pos/8)*8) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (i+1..pos-1).forEach { flips = flips or (1L shl it) }
-            }
-
-        //right
-        if(pos%8 < 6 && otherPos(pos+1))
-            for(i in pos+2 .. (pos/8)*8+7) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (pos+1..i-1).forEach { flips = flips or (1L shl it) }
-            }
-
-        //up
-        if(pos > 15 && otherPos(pos-8))
-            for(i in pos-16 downTo pos%8 step 8) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (i+8..pos-8 step 8).forEach { flips = flips or (1L shl it) }
-            }
-
-        //down
-        if(pos < 48 && otherPos(pos+8))
-            for(i in pos+16 .. pos%8+56 step 8) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (pos+8..i-8 step 8).forEach { flips = flips or (1L shl it) }
-            }
-
-        //diagonal /up
-        if(pos/8 > 1 && pos%8 < 6 && otherPos(pos-7))
-        {
-            var i = pos-14
-            while(i > 7 && i%8 < 7) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (i+7..pos-7 step 7).forEach {flips = flips or (1L shl it) }
-                i -=7
-            }
-        }
-
-        //diagonal \up
-        if(pos/8 > 1 && pos%8 > 1 && otherPos(pos-9))
-        {
-            var i = pos-18
-            while(i > 7 && i%8 > 0) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (i+9..pos-9 step 9).forEach { flips = flips or (1L shl it)}
-                i -= 9
-            }
-        }
-
-        //diagonal /down
-        if(pos/8 < 6 && pos%8 > 1 && otherPos(pos+7))
-        {
-            var i = pos+14
-            while(i < 56 && i%8 > 0) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (pos+7..i-7 step 7).forEach { flips = flips or (1L shl it)}
-                i += 7
-            }
-        }
-
-        //diagonal \down
-        if(pos/8 <6 && pos%8 <6 && otherPos(pos+9))
-        {
-            var i = pos+18
-            while(i < 56 && i%8 < 7) {
-                if(!boardPos(i))
-                    break
-                if(currentPos(i))
-                    (pos+9..i-9 step 9).forEach { flips = flips or (1L shl it) }
-                i += 9
-            }
-        }
-
-        return flips
-    }
-
-    fun listMoves() = (0..63).mapNotNull {
-        val mask = flips(it)
-        if(mask == 0L || boardPos(it))
-            null
-        else
-            Othello(
-                    players = if(turn == 1)
-                        listOf(players[0] or mask or (1L shl it), players[1] and mask.inv())
-                    else
-                        listOf(players[0] and mask.inv(), players[1] or mask or (1L shl it)),
-                    turn = -turn,
-                    prevOthello = this,
-                    freeSpace = freeSpace - 1
-            ) }
-
-    fun makeMove(pos: Int) = Othello(
-            players = if(turn == 1)
-                listOf(players[0] or flips(pos) or (1L shl pos), players[1] and flips(pos).inv())
-            else
-                listOf(players[0] and flips(pos).inv(), players[1] or flips(pos) or (1L shl pos)),
-            turn = -turn,
-            prevOthello = this,
-            freeSpace = freeSpace - 1
-    )
 
 
 
-    //TODO: Hier werden große Werte aufsummiert, die teilweise gar nicht zueinander passen ?
-    fun monteCarloResult(): Int {
-        return (1..MC_SEARCHES).sumBy {
-            val randomPlay: Othello = randomEndGame()
-            return@sumBy randomPlay.result()
-        }
-//        return ((1..MC_SEARCHES).sumBy {
-//            val randomPlay: Othello = randomLateGame()
-//            return@sumBy randomPlay.alphaBeta() * if(randomPlay.isPlayer1Turn() == this.isPlayer1Turn()) 1 else -1
-//        } / MC_SEARCHES.toDouble()).toInt()
-    }
-
-    private tailrec fun randomEndGame(it: Othello = this): Othello {
-        return if(it.isGameOver())
-            it
-        else
-            randomEndGame(it.listMoves().random().nextTurn())
-    }
-
-    private tailrec fun randomLateGame(it: Othello = this): Othello {
-        return if(it.isGameOver() || it.freeSpace <= DEPTH + 1)
-            it
-        else
-            randomLateGame(it.listMoves().random().nextTurn())
-    }
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ALPHA BETA EVALUATION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
     //alpha beta with side effects on hash table
     fun alphaBeta(depth: Int = DEPTH, alpha: Int = -Int.MAX_VALUE, beta: Int = Int.MAX_VALUE): Int {
@@ -251,7 +243,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
             return -switchTurns().alphaBeta(depth, -beta, -alpha)
 
         if(depth == 0)
-            return monteCarloResult() * depth * -turn
+            return dynamicHeuristic() * depth * -turn
 
         //alpha-beta-implementation combined with negamax
         val bestScore = run {
@@ -267,6 +259,10 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
         results[this] = bestScore
         return bestScore
     }
+
+
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  SYMMETRIE BY MIRRORS AND ROTATIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
     //https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating
     private fun hashVal(player: Long): Long {
@@ -304,10 +300,6 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
         }
 
 
-
-
-
-
         //var, da damit die Performance stark verbessert wird, indem mit der bestehenden Transformierung weiter gearbeitet wird
         var minimum = player
         var rot = player
@@ -333,10 +325,15 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
     private fun hashValPlayer1() = hashVal(players[0])
     private fun hashValPlayer2() = hashVal(players[1])
 
+
+
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  EQUALS AND toSTRING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Othello) return false
-        return other.turn == this.turn && other.hashValPlayer1() == this.hashValPlayer1() && other.hashValPlayer2() == this.hashValPlayer2()
+        return ((other.hashValPlayer1() == this.hashValPlayer1() && other.hashValPlayer2() == this.hashValPlayer2()) || (other.hashValPlayer1() == hashValPlayer2() && hashValPlayer2() == hashValPlayer1()))
     }
 
     override fun toString(): String {
@@ -345,14 +342,17 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
         }
     }
 
+
+
+
+
+
+    /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  HTML RESPONSE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
     /*
-    Html Response with the following form:
         boardAsHTML###turn###scorePlayer1###scorePlayer2###result
-
-    example:
         <table>...</table###-1###23###41###0
-
-     */
+    */
     fun htmlResponse(): String {
             return (0..63).joinToString(separator = "", prefix = "<table>", postfix = "</table>") {
                 (if(it%8==0 && it != 0) "</tr>" else "") +
@@ -384,7 +384,5 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
                     scorePlayer2() +
                     "###" +
                     if(isGameOver()) result() else "nowin"
-
-
     }
 }

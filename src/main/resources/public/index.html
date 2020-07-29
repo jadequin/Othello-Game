@@ -191,9 +191,11 @@ Player 2:
 <br><br><br><br>
 <button onclick="sendGET('bestMove')">Best Move</button>
 <br><br>
-<button onclick="sendGET('undo')">Undo</button>
-<br><br>
 <button onclick="sendGET('randomMove')">Random Move</button>
+<br><br>
+<button onclick="sendGET('undo')">Undo</button>
+
+
 <br><br>
 
 <!--- Some information about the game state --->
@@ -246,11 +248,11 @@ Turn: <label id="turn"></label>
             //check if there are automatic moves to be made
             if(!isGameOver && ((isP1Turn && document.getElementById('p1Computer').checked) || (!isP1Turn && document.getElementById('p2Computer').checked))) {
                 document.getElementById('game').style.pointerEvents="none"
-                setTimeout(() => { sendGET('bestMove') }, 650);
+                setTimeout(() => { sendGET('bestMove') }, 650); //delay the request
             }
             else if(!isGameOver && ((isP1Turn && document.getElementById('p1Random').checked) || (!isP1Turn && document.getElementById('p2Random').checked))) {
                 document.getElementById('game').style.pointerEvents="none"
-                setTimeout(() => { sendGET('randomMove') }, 650);
+                setTimeout(() => { sendGET('randomMove') }, 650); //delay the request
             }
         }
     }
