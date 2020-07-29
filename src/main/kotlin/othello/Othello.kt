@@ -10,8 +10,8 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
 
     companion object {
-        private const val DEPTH = 4
-        private const val MC_SEARCHES = 250
+        private const val DEPTH = 3
+        private const val MC_SEARCHES = 200
 
         val results = hashMapOf<Othello, Int>()
 
@@ -31,11 +31,12 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
     fun board() = players[0] or players[1]
 
     fun bestMove(): Othello {
-        var countMoves = 0.0
-        return listMoves().maxBy {
-            print("${((countMoves++ / countValidMoves()) * 100).toInt()}%\r")
-            return@maxBy it.monteCarloResult()
-        }!!
+        return listMoves().maxBy { it.alphaBeta() }!!
+//        var countMoves = 0.0
+//        return listMoves().maxBy {
+//            print("${((countMoves++ / countValidMoves()) * 100).toInt()}%\r")
+//            return@maxBy it.monteCarloResult()
+//        }!!
     }
 
     fun randomMove() = if(isGameOver()) this else nextTurn().listMoves().random()
@@ -60,8 +61,35 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
     fun scorePlayer1() = (0..63).count { players[0] and (1L shl it) != 0L }
     fun scorePlayer2() = (0..63).count { players[1] and (1L shl it) != 0L }
 
+    fun result(): Int {
+        return (scorePlayer1() - scorePlayer2()).sign
+    }
 
-    fun result() = (scorePlayer1() - scorePlayer2()).sign
+    fun dynamicHeuristic(): Int {
+        //1:Coin Parity + 2:Mobility + 3:Corners captured + 4:Stability
+        val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
+        val corners = listOf(0, 7, 56, 63)
+        val cornerCloseness = listOf(1,8,9, 6,14,15, 48,49,57, 54,55,62)
+
+
+
+        val cornerVal = 25 * (corners.count { currentPos(it) } - corners.count { otherPos(it) })
+
+        val cornerClosenessVal = -12.5 * (cornerCloseness.count { !boardPos(corners[it%3]) && currentPos(it) } - cornerCloseness.count { !boardPos(corners[it%3]) && otherPos(it) })
+
+        val myMobility = this.countValidMoves()
+        val oppMobility = switchTurns().countValidMoves()
+        val mobilityVal = if(myMobility > oppMobility) (100.0 * myMobility)/(myMobility + oppMobility) else if(myMobility < oppMobility) -(100.0 * oppMobility)/(myMobility + oppMobility) else 0.0
+
+        val pieceRating = (0..63).sumBy { if(currentPos(it)) ratings[it] else if(otherPos(it)) -ratings[it] else 0 }
+
+        val myPieces = (0..63).count { currentPos(it) }
+        val oppPieces = (0..63).count { otherPos(it) }
+        val pieceDifference = if(myPieces > oppPieces) (100.0 * myPieces)/(myPieces + oppPieces) else if(myPieces < oppPieces) -(100.0 * oppPieces)/(myPieces + oppPieces) else 0.0
+
+        return ((10.0 * pieceDifference) + (801.724 * cornerVal) + (382.026 * cornerClosenessVal) + (78.922 * mobilityVal) + (10.0 * pieceRating)).toInt() // + (74.396 * )
+
+    }
 
     private fun flips(pos: Int): Long {
         var flips = 0L
@@ -186,28 +214,44 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
 
     //TODO: Hier werden große Werte aufsummiert, die teilweise gar nicht zueinander passen ?
     fun monteCarloResult(): Int {
-        return(1..MC_SEARCHES).sumBy {
-            val randomPlay: Othello = randomLateGame()
-            return@sumBy randomPlay.alphaBeta().sign
-        }.sign
+        return (1..MC_SEARCHES).sumBy {
+            val randomPlay: Othello = randomEndGame()
+            return@sumBy randomPlay.result()
+        }
+//        return ((1..MC_SEARCHES).sumBy {
+//            val randomPlay: Othello = randomLateGame()
+//            return@sumBy randomPlay.alphaBeta() * if(randomPlay.isPlayer1Turn() == this.isPlayer1Turn()) 1 else -1
+//        } / MC_SEARCHES.toDouble()).toInt()
     }
 
-    fun randomLateGame(): Othello = if(!isGameOver() && freeSpace > DEPTH + 1)
-        nextTurn().listMoves().random().randomLateGame()
-    else
-        this
+    private tailrec fun randomEndGame(it: Othello = this): Othello {
+        return if(it.isGameOver())
+            it
+        else
+            randomEndGame(it.listMoves().random().nextTurn())
+    }
+
+    private tailrec fun randomLateGame(it: Othello = this): Othello {
+        return if(it.isGameOver() || it.freeSpace <= DEPTH + 1)
+            it
+        else
+            randomLateGame(it.listMoves().random().nextTurn())
+    }
 
     //alpha beta with side effects on hash table
     fun alphaBeta(depth: Int = DEPTH, alpha: Int = -Int.MAX_VALUE, beta: Int = Int.MAX_VALUE): Int {
 
         if(results[this] != null)
-            return results[this]!! * (depth + 1)
+            return results[this]!! * depth
 
         if(isGameOver())
-            return result() * turn * (depth + 1) * 100_000
+            return result() * depth * 1000 * -turn
 
         if(!isMoveAvailable())
             return -switchTurns().alphaBeta(depth, -beta, -alpha)
+
+        if(depth == 0)
+            return monteCarloResult() * depth * -turn
 
         //alpha-beta-implementation combined with negamax
         val bestScore = run {
