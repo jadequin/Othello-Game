@@ -47,13 +47,13 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
     //Game ends when there are no more moves left for both players
     fun isGameOver() = !nextTurn().isMoveAvailable()
 
-    fun isPlayerXTurn() = turn == 1
+    fun isPlayer1Turn() = turn == 1
 
     fun scorePlayer1() = (0..63).count { players[0] and (1L shl it) != 0L }
     fun scorePlayer2() = (0..63).count { players[1] and (1L shl it) != 0L }
 
 
-    fun result() = (scorePlayer1() - scorePlayer2()).sign * turn
+    fun result() = (scorePlayer1() - scorePlayer2()).sign
 
     private fun flips(pos: Int): Long {
         var flips = 0L
@@ -180,7 +180,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
     fun monteCarloResult(): Int {
         return(1..MC_SEARCHES).sumBy {
             val randomPlay: Othello = randomLateGame()
-            return@sumBy randomPlay.alphaBeta().sign * if(randomPlay.turn == this.turn) 1 else -1
+            return@sumBy randomPlay.alphaBeta().sign
         }.sign
     }
 
@@ -196,7 +196,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
             return results[this]!! * (depth + 1)
 
         if(isGameOver())
-            return result() * (depth + 1) * 100_000
+            return result() * turn * (depth + 1) * 100_000
 
         if(!isMoveAvailable())
             return -switchTurns().alphaBeta(depth, -beta, -alpha)
@@ -331,7 +331,7 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
                     "###" +
                     scorePlayer2() +
                     "###" +
-                    if(isGameOver()) result() * turn else "nowin"
+                    if(isGameOver()) result() else "nowin"
 
 
     }
