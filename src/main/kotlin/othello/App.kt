@@ -53,6 +53,18 @@ class App(var othello: Othello = Othello(), var isP1COM: Boolean = false, var is
 }
 
 fun main() {
-    try { Desktop.getDesktop().browse(URL("http://localhost:7070/").toURI()) } catch (e: Exception) { }
-    App()
+//    try { Desktop.getDesktop().browse(URL("http://localhost:7070/").toURI()) } catch (e: Exception) { }
+//    App()
+    test()
+}
+
+fun test() {
+    var o = Othello()
+    while(!o.isGameOver()) {
+        o = o.nextTurn()
+        println(o)
+        o = if(o.isPlayer1Turn()) o.bestMove() else o.randomMove()
+    }
+    println(o)
+    println("AI:${o.scorePlayer1()}, Random:${o.scorePlayer2()}")
 }

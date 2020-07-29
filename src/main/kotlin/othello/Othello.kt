@@ -14,6 +14,14 @@ class Othello (val players: List<Long> = listOf(34628173824L, 68853694464L), pri
         private const val MC_SEARCHES = 250
 
         val results = hashMapOf<Othello, Int>()
+
+        fun of(p1Pos: List<Int>, p2Pos: List<Int>, turn: Int): Othello {
+            val freeSpace = 64 - (p1Pos.size + p2Pos.size)
+            val p1 = p1Pos.fold(0L) { acc, i -> acc or (1L shl i) }
+            val p2 = p1Pos.fold(0L) { acc, i -> acc or (1L shl i) }
+
+            return Othello(listOf(p1, p2), turn, null, freeSpace )
+        }
     }
 
     val boardPos = {pos: Int -> board() and (1L shl pos) != 0L}

@@ -207,6 +207,7 @@ Turn: <label id="turn"></label>
 
     var isP1COM = false
     var isP2COM = true
+    var turn =
 
     //initial game state call
     sendGET("state")
@@ -215,8 +216,6 @@ Turn: <label id="turn"></label>
     function sendGET(request) {
         http.open('GET', request);
         http.send();
-
-
     }
 
     //RECEIVER
