@@ -25,7 +25,7 @@ Sobald es keine gültigen Züge für beide Spieler mehr gibt, endet das Spiel (d
 
 ### Bedienungsanleitung
 
-![Screenshot](screenshot.PNG)
+![Screenshot](screenshot.png)
 
 Nach dem Start mit `gradle run` öffnet sich automatisch der Standard-Browser mit der im Programm hinterlegten URL.
 Falls dies nicht funktionieren sollte, kann die Oberfläche auch über `http://localhost:7070/` erreicht werden.
