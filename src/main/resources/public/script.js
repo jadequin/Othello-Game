@@ -33,7 +33,7 @@ http.onload = function() {
         let elements = this.responseText.split("###")
 
         document.getElementById('game').innerHTML = elements[0]
-        document.getElementById('turn').innerText = elements[1] === '1' ? "P1" : "P2"
+        document.getElementById('turn').innerText = elements[1] === '1' ? "P1 (Black)" : "P2 (White)"
         document.getElementById('scoreP1').innerText = elements[2]
         document.getElementById('scoreP2').innerText = elements[3]
         document.getElementById('win').innerText = elements[4] === '1'? 'Player 1 Wins!!!' : elements[4] === '-1'? 'Player 2 Wins!!!' : elements[4] === '0'? 'Tie !' : ""
@@ -54,8 +54,4 @@ http.onload = function() {
             setTimeout(() => { sendGET('randomMove') }, 650); //delay the request
         }
     }
-}
-
-function sendMove(request) {
-    sendGET(request)
 }

@@ -5,7 +5,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sign
 
-//http://mnemstudio.org/game-reversi-example-2.htm
 
 class Othello (private val players: List<Long> = listOf(34628173824L, 68853694464L), private val turn: Int = +1, private val prevOthello: Othello? = null): OthelloGame {
 

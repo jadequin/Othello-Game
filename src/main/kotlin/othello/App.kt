@@ -12,12 +12,6 @@ class App() {
 
     init {
 
-        //Generate a tie
-        othello = Othello().randomGame()
-        while(othello.result() != 0)
-        othello = Othello().randomGame()
-
-
         val app = Javalin.create {config -> config.addStaticFiles("/public")}.start(7070)
 
         app.get("/makeMove"){ ctx ->
