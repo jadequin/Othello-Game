@@ -1,5 +1,6 @@
 package othello
 
+import java.io.File
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sign
@@ -13,11 +14,31 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         private const val DEPTH = 4
         val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
 
-        //Sorted indices by value for earlier cut offs
+        //Descending sorted indices by value for earlier cut offs
         val ratingIndicesSortedDesc = ratings.indices.sortedByDescending { ratings[it] }
 
         val results = hashMapOf<Othello, Int>()
 
+        fun of(p1: Long, p2: Long, turn: Int): Othello {
+            return Othello(listOf(p1, p2), turn, null)
+        }
+
+        /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  DATABASE INIT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+        private val database = File("src/main/kotlin/othello/db.txt")
+
+        //read all saved results from DB
+        init {
+            val equalBoard = { players: List<Long> -> Othello(players)}
+
+            database.forEachLine {
+                val entry = it.split(";")
+                val players = entry[0].substring(1, entry[0].length - 1).split(", ")
+                val key = equalBoard(listOf(players[0].toLong(), players[1].toLong()))
+                val value = entry[1].toInt()
+                results[key] = value
+            }
+        }
     }
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  BOARD SHIFTERS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
@@ -205,27 +226,29 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
     //https://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello/
 
     private fun dynamicHeuristic(): Int {
-        //1:Coin Parity + 2:Mobility + 3:Corners captured + 4:Stability
         val corners = listOf(0, 7, 56, 63)
         val cornerCloseness = listOf(1,8,9, 6,14,15, 48,49,57, 54,55,62)
 
 
+        //CORNERS CAPTURED
         val cornerVal = 25 * (corners.count { currentPos(it) } - corners.count { otherPos(it) })
-
         val cornerClosenessVal = -12.5 * (cornerCloseness.indices.count { !boardPos(corners[it/3]) && currentPos(cornerCloseness[it]) } - cornerCloseness.indices.count { !boardPos(corners[it/3]) && otherPos(cornerCloseness[it]) })
 
+        //MOBILITY
         val myMobility = this.countValidMoves()
         val oppMobility = switchTurns().countValidMoves()
         val mobilityVal = if(myMobility > oppMobility) (100.0 * myMobility)/(myMobility + oppMobility) else if(myMobility < oppMobility) -(100.0 * oppMobility)/(myMobility + oppMobility) else 0.0
 
+        //STABILITY
         val pieceRating = (0..63).sumBy { if(currentPos(it)) ratings[it] else if(otherPos(it)) -ratings[it] else 0 }
 
+        //COIN PARITY
         val myPieces = (0..63).count { currentPos(it) }
         val oppPieces = (0..63).count { otherPos(it) }
         val pieceDifference = if(myPieces > oppPieces) (100.0 * myPieces)/(myPieces + oppPieces) else if(myPieces < oppPieces) -(100.0 * oppPieces)/(myPieces + oppPieces) else 0.0
 
+        //WEIGHTED SCORE
         return ((10.0 * pieceDifference) + (801.724 * cornerVal) + (382.026 * cornerClosenessVal) + (78.922 * mobilityVal) + (10.0 * pieceRating)).toInt() // + (74.396 * )
-
     }
 
 
@@ -236,8 +259,13 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
     //alpha beta with side effects on hash table
     fun alphaBeta(depth: Int = DEPTH, alpha: Int = -Int.MAX_VALUE, beta: Int = Int.MAX_VALUE): Int {
 
+        //look up the table if there is a key with the current setup
         if(results[this] != null)
             return results[this]!! * depth
+
+        //maybe there is a result with a swapped key... invert it then
+        if(results[swappedBoard()] != null)
+            return results[this]!! * depth * -1
 
         if(isGameOver())
             return result() * depth * 1000 * -turn
@@ -248,7 +276,6 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         if(depth == 0)
             return dynamicHeuristic() * depth * -turn
 
-        //alpha-beta-implementation combined with negamax
         val bestScore = run {
             listMoves().fold(alpha) {
                 bestScore, move ->
@@ -260,10 +287,12 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         }
 
         results[this] = bestScore
+        //database.appendText("$players;$bestScore\n") //uncomment to save more results to the database
         return bestScore
     }
 
-
+    //helper function for further use of the symmetries
+    private fun swappedBoard() = Othello(listOf(players[1], players[0]))
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  SYMMETRIE BY MIRRORS AND ROTATIONS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -336,12 +365,12 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Othello) return false
-        return ((other.hashValPlayer1() == this.hashValPlayer1() && other.hashValPlayer2() == this.hashValPlayer2()) || (other.hashValPlayer1() == hashValPlayer2() && hashValPlayer2() == hashValPlayer1()))
+        return other.hashValPlayer1() == this.hashValPlayer1() && other.hashValPlayer2() == this.hashValPlayer2()
     }
 
     override fun toString(): String {
-        return (0..63).joinToString(prefix = "-".repeat(17) + "\n|", postfix = "|\n" + "-".repeat(17), separator = "|") {
-            (if(it != 0 && it%8==0) "\n|" else "") + (if(players[0] shr it and 1L == 1L) "X" else if(players[1] shr it and 1L == 1L) "O" else " ")
+        return (0..63).joinToString(prefix = "-".repeat(33) + "\n|", postfix = "|\n" + "-".repeat(33), separator = "|") {
+            (if(it != 0 && it%8==0) "\n|" else "") + (if(players[0] shr it and 1L == 1L) " X " else if(players[1] shr it and 1L == 1L) " O " else "%3d".format(it))
         }
     }
 
@@ -387,5 +416,10 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
                     scorePlayer2() +
                     "###" +
                     if(isGameOver()) result() else "nowin"
+    }
+
+    //Used for the Print to console action
+    fun toTriple(): String {
+        return "Triple(${players[0]}L, ${players[1]}L, $turn)"
     }
 }

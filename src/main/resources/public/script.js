@@ -1,5 +1,7 @@
 
 let http = new XMLHttpRequest();
+var start = Date.now()
+var end
 
 //initial game state call
 sendGET("state")
@@ -8,6 +10,7 @@ sendGET("state")
 function sendGET(request) {
     http.open('GET', request);
     http.send();
+    start = Date.now()
 }
 
 //RECEIVER
@@ -21,6 +24,9 @@ http.onload = function() {
             <table>...</table###-1###23###41###0
 
          */
+        end = Date.now()
+        document.getElementById('responseTime').innerText = (end - start).toString()
+
         let elements = this.responseText.split("###")
 
         document.getElementById('game').innerHTML = elements[0]

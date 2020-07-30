@@ -118,10 +118,11 @@ Player 2:
 <button onclick="sendGET('newGame')">New Game</button>
 <br><br><br><br>
 <button onclick="sendGET('bestMove')">Best Move</button>
-<br><br>
 <button onclick="sendGET('randomMove')">Random Move</button>
-<br><br>
 <button onclick="sendGET('undo')">Undo</button>
+<br><br>
+<br><br>
+<button onclick="sendGET('printToConsole')">Print board to console</button>
 
 
 <br><br>
@@ -134,6 +135,8 @@ Score P2: <label id="scoreP2">0</label>
 Turn: <label id="turn"></label>
 <br><br>
 <label id="win"></label>
+<br><br><br>
+Last response time: <label id="responseTime"></label> ms
 
 
 <script src="script.js"></script>
