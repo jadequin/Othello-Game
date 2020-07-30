@@ -56,12 +56,12 @@ Der String ist ein Triple-Objekt, wird in der Konsole ausgegeben und kann in der
 
     \build.gradle
     \README.md
-    \screenshot.PNG
+    \screenshot.png
     \src\main\kotlin\othello\App.kt
     \src\main\kotlin\othello\Othello.kt
     \src\main\kotlin\othello\OthelloGame.kt
     \src\main\kotlin\othello\Test.kt
-    \src\main\kotlin\othello\db.txt
+    \src\main\resources\db.txt
     \src\main\resources\public\black-circle.png
     \src\main\resources\public\white-circle.png
     \src\main\resources\public\index.html
@@ -90,7 +90,11 @@ Umsetzung  | 120 | 100 |  40 | 130 |  100 |
 Gewichtung | 0.4 | 0.3 | 0.3 | 0.3 |  0.3 | 
 Ergebnis   |  48 |  30 |  12 |  39 |   30 | **159%**
 
-<Erläuterungen zur Ihrer Implementierung der Spiele-Engine>
+
+#### Einleitung
+Die Engine 
+
+
 <br />
 <br />
 
@@ -121,230 +125,233 @@ Anleitung zum Generieren eigener Testszenarien:
 <br />
 
 Die Testausführung protokolliert sich über die Konsole wie folgt:
+    
+<details>
+ <summary>Alle Tests anzeigen</summary>
+ 
+     ----------- TEST MODE START -----------------------------------------------------------------------------------------
+     
+     Player1 = X                  Player2 = O
+     
+     
+     Positive evaluation values are good for the current player, while negative values could lead to a loss
+     ---------------------------------------------------------------------------------------------------------------------
+     
+     
+     
+     
+     
+     ###########################################################################
+     #                           Test 1                                        #
+     ###########################################################################
+     
+     
+     ---------------------------------
+     | X | X | X | X | X | O | X |  7|
+     | X | X | X | O | O | O | O | O |
+     | X | X | X | X | X | O | O | O |
+     | X | X | X | X | O | O | X | O |
+     | X | X | X | X | X | O | X | O |
+     | O | O | O | X | X | O | X | O |
+     | O | O | X | X | X | O | X | O |
+     | O | O | O | O | O | O | 62| O |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
+     Position 7 = 0
+     Position 62 = 3000
+     
+     ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
+     at position 62
+     
+     ---------------------------------
+     | X | X | X | X | X | O | X |  7|
+     | X | X | X | O | O | O | O | O |
+     | X | X | X | X | X | O | O | O |
+     | X | X | X | X | O | O | X | O |
+     | X | X | X | X | X | O | X | O |
+     | O | O | O | X | X | O | X | O |
+     | O | O | X | X | X | X | X | O |
+     | O | O | O | O | O | O | X | O |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
+     Win for player1
+     
+     ---------------------------------
+     | X | X | X | X | X | O | O | O |
+     | X | X | X | O | O | O | O | O |
+     | X | X | X | X | X | O | O | O |
+     | X | X | X | X | O | O | X | O |
+     | X | X | X | X | X | O | X | O |
+     | O | O | O | X | X | O | X | O |
+     | O | O | X | X | X | X | X | O |
+     | O | O | O | O | O | O | X | O |
+     ---------------------------------
+     Score: (P1=33 | P2=31)
+     
+     
+     
+     
+     
+     ###########################################################################
+     #                           Test 2                                        #
+     ###########################################################################
+     
+     
+     ---------------------------------
+     | O | O | O | O | O | X | O | O |
+     | X | O | O | O | O | X | O | X |
+     | X | X | O | X | X | X | X | X |
+     | 24| X | X | O | O | O | O | X |
+     | O | X | O | O | O | O | O | X |
+     | X | X | X | X | X | O | O | X |
+     | O | O | O | X | O | X | X | X |
+     | 56| O | 58| X | X | X | X | X |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
+     Position 24 = 2000
+     Position 58 = 2000
+     
+     ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
+     at position 24
+     
+     ---------------------------------
+     | O | O | O | O | O | X | O | O |
+     | X | O | O | O | O | X | O | X |
+     | X | X | O | X | X | X | X | X |
+     | 24| X | X | O | O | O | O | X |
+     | O | X | O | O | O | O | O | X |
+     | X | X | X | X | O | O | O | X |
+     | O | O | O | O | O | X | X | X |
+     | 56| O | O | X | X | X | X | X |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
+     Win for player1
+     
+     ---------------------------------
+     | O | O | O | O | O | X | O | O |
+     | X | O | O | O | O | X | O | X |
+     | X | X | O | X | X | X | X | X |
+     | X | X | X | O | O | O | O | X |
+     | X | X | O | O | O | O | O | X |
+     | X | X | X | X | O | O | O | X |
+     | X | X | O | O | O | X | X | X |
+     | X | X | X | X | X | X | X | X |
+     ---------------------------------
+     Score: (P1=36 | P2=28)
+     
+     
+     
+     
+     
+     ###########################################################################
+     #                           Test 3                                        #
+     ###########################################################################
+     
+     
+     ---------------------------------
+     | X | X | X |  3| O |  5| X | X |
+     | X | O | X | 11| 12| O | X | X |
+     | X | X | X | X | X | X | X | X |
+     | O | O | X | X | X | X | O | X |
+     | O | O | X | X | X | O | O | X |
+     | X | O | X | O | X | O | O | O |
+     | X | O | O | X | O | O | O | O |
+     | X | O | O | O | O | O | O | O |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
+     Position 11 = 1000
+     Position 12 = 1000
+     
+     ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
+     at position 11
+     
+     ---------------------------------
+     | X | X | X |  3| O |  5| X | X |
+     | X | O | O | O | 12| O | X | X |
+     | X | X | O | O | O | X | X | X |
+     | O | O | X | O | X | O | O | X |
+     | O | O | X | O | X | O | O | X |
+     | X | O | X | O | X | O | O | O |
+     | X | O | O | X | O | O | O | O |
+     | X | O | O | O | O | O | O | O |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
+     Win for player1
+     
+     ---------------------------------
+     | X | X | X | X | X | X | X | X |
+     | X | O | X | X | O | X | X | X |
+     | X | X | O | X | O | O | X | X |
+     | O | O | X | X | X | O | O | X |
+     | O | O | X | X | X | O | O | X |
+     | X | O | X | X | X | O | O | O |
+     | X | O | O | X | O | O | O | O |
+     | X | O | O | O | O | O | O | O |
+     ---------------------------------
+     Score: (P1=34 | P2=30)
+     
+     
+     
+     
+     
+     ###########################################################################
+     #                           Test 4                                        #
+     ###########################################################################
+     
+     
+     ---------------------------------
+     | O | X | X | X | X | X | X | X |
+     |  8| O | O | O | O | O | X | X |
+     | O | O | O | O | X | X | O | X |
+     | O | O | O | O | O | O | O | X |
+     | O | O | O | O | O | O | O | X |
+     | O | O | O | X | O | O | O | 47|
+     | O | O | O | O | X | O | O | X |
+     | O | O | O | O | O | O | O | O |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
+     Position 8 = -3000
+     Position 47 = 0
+     
+     ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
+     at position 47
+     
+     ---------------------------------
+     | O | X | X | X | X | X | X | X |
+     |  8| O | O | O | O | O | X | X |
+     | O | O | O | O | X | X | O | X |
+     | O | O | O | O | O | X | O | X |
+     | O | O | O | O | O | O | X | X |
+     | O | O | O | X | X | X | X | X |
+     | O | O | O | O | X | O | O | X |
+     | O | O | O | O | O | O | O | O |
+     ---------------------------------
+     
+     ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
+     Tie
+     
+     ---------------------------------
+     | O | X | X | X | X | X | X | X |
+     | X | X | X | X | X | X | X | X |
+     | O | X | O | O | X | X | O | X |
+     | O | O | X | O | O | X | O | X |
+     | O | O | O | X | O | O | X | X |
+     | O | O | O | X | X | X | X | X |
+     | O | O | O | O | X | O | O | X |
+     | O | O | O | O | O | O | O | O |
+     ---------------------------------
+     Score: (P1=32 | P2=32)
+ 
+</details>
+    
 
-    ----------- TEST MODE START -----------------------------------------------------------------------------------------
-    
-    Player1 = X                  Player2 = O
-    
-    
-    Positive evaluation values are good for the current player, while negative values could lead to a loss
-    ---------------------------------------------------------------------------------------------------------------------
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    ###########################################################################
-    #                           Test 1                                        #
-    ###########################################################################
-    
-    
-    ---------------------------------
-    | X | X | X | X | X | O | X |  7|
-    | X | X | X | O | O | O | O | O |
-    | X | X | X | X | X | O | O | O |
-    | X | X | X | X | O | O | X | O |
-    | X | X | X | X | X | O | X | O |
-    | O | O | O | X | X | O | X | O |
-    | O | O | X | X | X | O | X | O |
-    | O | O | O | O | O | O | 62| O |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
-    Position 7 = 0
-    Position 62 = 3000
-    
-    ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
-    at position 62
-    
-    ---------------------------------
-    | X | X | X | X | X | O | X |  7|
-    | X | X | X | O | O | O | O | O |
-    | X | X | X | X | X | O | O | O |
-    | X | X | X | X | O | O | X | O |
-    | X | X | X | X | X | O | X | O |
-    | O | O | O | X | X | O | X | O |
-    | O | O | X | X | X | X | X | O |
-    | O | O | O | O | O | O | X | O |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
-    Win for player1
-    
-    ---------------------------------
-    | X | X | X | X | X | O | O | O |
-    | X | X | X | O | O | O | O | O |
-    | X | X | X | X | X | O | O | O |
-    | X | X | X | X | O | O | X | O |
-    | X | X | X | X | X | O | X | O |
-    | O | O | O | X | X | O | X | O |
-    | O | O | X | X | X | X | X | O |
-    | O | O | O | O | O | O | X | O |
-    ---------------------------------
-    Score: (P1=33 | P2=31)
-    
-    
-    
-    
-    
-    ###########################################################################
-    #                           Test 2                                        #
-    ###########################################################################
-    
-    
-    ---------------------------------
-    | O | O | O | O | O | X | O | O |
-    | X | O | O | O | O | X | O | X |
-    | X | X | O | X | X | X | X | X |
-    | 24| X | X | O | O | O | O | X |
-    | O | X | O | O | O | O | O | X |
-    | X | X | X | X | X | O | O | X |
-    | O | O | O | X | O | X | X | X |
-    | 56| O | 58| X | X | X | X | X |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
-    Position 24 = 2000
-    Position 58 = 2000
-    
-    ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
-    at position 24
-    
-    ---------------------------------
-    | O | O | O | O | O | X | O | O |
-    | X | O | O | O | O | X | O | X |
-    | X | X | O | X | X | X | X | X |
-    | 24| X | X | O | O | O | O | X |
-    | O | X | O | O | O | O | O | X |
-    | X | X | X | X | O | O | O | X |
-    | O | O | O | O | O | X | X | X |
-    | 56| O | O | X | X | X | X | X |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
-    Win for player1
-    
-    ---------------------------------
-    | O | O | O | O | O | X | O | O |
-    | X | O | O | O | O | X | O | X |
-    | X | X | O | X | X | X | X | X |
-    | X | X | X | O | O | O | O | X |
-    | X | X | O | O | O | O | O | X |
-    | X | X | X | X | O | O | O | X |
-    | X | X | O | O | O | X | X | X |
-    | X | X | X | X | X | X | X | X |
-    ---------------------------------
-    Score: (P1=36 | P2=28)
-    
-    
-    
-    
-    
-    ###########################################################################
-    #                           Test 3                                        #
-    ###########################################################################
-    
-    
-    ---------------------------------
-    | X | X | X |  3| O |  5| X | X |
-    | X | O | X | 11| 12| O | X | X |
-    | X | X | X | X | X | X | X | X |
-    | O | O | X | X | X | X | O | X |
-    | O | O | X | X | X | O | O | X |
-    | X | O | X | O | X | O | O | O |
-    | X | O | O | X | O | O | O | O |
-    | X | O | O | O | O | O | O | O |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
-    Position 11 = 1000
-    Position 12 = 1000
-    
-    ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
-    at position 11
-    
-    ---------------------------------
-    | X | X | X |  3| O |  5| X | X |
-    | X | O | O | O | 12| O | X | X |
-    | X | X | O | O | O | X | X | X |
-    | O | O | X | O | X | O | O | X |
-    | O | O | X | O | X | O | O | X |
-    | X | O | X | O | X | O | O | O |
-    | X | O | O | X | O | O | O | O |
-    | X | O | O | O | O | O | O | O |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
-    Win for player1
-    
-    ---------------------------------
-    | X | X | X | X | X | X | X | X |
-    | X | O | X | X | O | X | X | X |
-    | X | X | O | X | O | O | X | X |
-    | O | O | X | X | X | O | O | X |
-    | O | O | X | X | X | O | O | X |
-    | X | O | X | X | X | O | O | O |
-    | X | O | O | X | O | O | O | O |
-    | X | O | O | O | O | O | O | O |
-    ---------------------------------
-    Score: (P1=34 | P2=30)
-    
-    
-    
-    
-    
-    ###########################################################################
-    #                           Test 4                                        #
-    ###########################################################################
-    
-    
-    ---------------------------------
-    | O | X | X | X | X | X | X | X |
-    |  8| O | O | O | O | O | X | X |
-    | O | O | O | O | X | X | O | X |
-    | O | O | O | O | O | O | O | X |
-    | O | O | O | O | O | O | O | X |
-    | O | O | O | X | O | O | O | 47|
-    | O | O | O | O | X | O | O | X |
-    | O | O | O | O | O | O | O | O |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ EVALUATIONS ~~~~~~~~~~~~~~~~~~~~
-    Position 8 = -3000
-    Position 47 = 0
-    
-    ~~~~~~~~~~~~~~~~~~~~ BEST MOVE ~~~~~~~~~~~~~~~~~~~~
-    at position 47
-    
-    ---------------------------------
-    | O | X | X | X | X | X | X | X |
-    |  8| O | O | O | O | O | X | X |
-    | O | O | O | O | X | X | O | X |
-    | O | O | O | O | O | X | O | X |
-    | O | O | O | O | O | O | X | X |
-    | O | O | O | X | X | X | X | X |
-    | O | O | O | O | X | O | O | X |
-    | O | O | O | O | O | O | O | O |
-    ---------------------------------
-    
-    ~~~~~~~~~~~~~~~~~~~~ LEADS TO ~~~~~~~~~~~~~~~~~~~~
-    Tie
-    
-    ---------------------------------
-    | O | X | X | X | X | X | X | X |
-    | X | X | X | X | X | X | X | X |
-    | O | X | O | O | X | X | O | X |
-    | O | O | X | O | O | X | O | X |
-    | O | O | O | X | O | O | X | X |
-    | O | O | O | X | X | X | X | X |
-    | O | O | O | O | X | O | O | X |
-    | O | O | O | O | O | O | O | O |
-    ---------------------------------
-    Score: (P1=32 | P2=32)
 <br />
 <br />
 
@@ -371,13 +378,13 @@ Die Felder werden nicht umsonst in drei Kategorien eingeteilt; mithilfe von CSS 
 ### Javascript
 
 #### Kommunikation
-Am Anfang habe ich immer nur das aktuelle Spielfeld als ``table`` in der Antwort auf ein GET gesendet.
+Am Anfang wurde immer nur das aktuelle Spielfeld als ``table`` in der Antwort auf ein GET gesendet.
 Der erhaltene String wird einfach nur in das innerHTML eines ``div`` geschrieben, um dadurch das Board zu aktualisieren.
-Nun gibt es allerdings noch mehr Informationen über den aktuellen Spielzustand, den ich gerne übermitteln würde wie
+Nun gibt es allerdings noch mehr Informationen über den aktuellen Spielzustand, der übermittelt werden sollte wie
 z.B. wer gerade am Zug ist, was der aktuelle Score ist oder ob jemand gewonnen hat. Dazu kam mir folgende Idee:
 
 <br>
-Ich sende alle Informationen in einem String, allerdings mit System. Eine Nachricht sollte so aufgebaut sein:
+Alle Informationen werden in einen String verpackt, allerdings mit System. Eine Nachricht sollte so aufgebaut sein:
 
     boardAsHTML###turn###scorePlayer1###scorePlayer2###result
 
@@ -415,7 +422,14 @@ Mithilfe von zwei Variablen, die die Timestamps verwalten, kann dann im Dokument
 
 ## Hinweise
 
-* Die dargestellte Antwortzeit funktioniert korrekt, die Darstellung wird lediglich immer künstlich um eine gewisse Zeitspanne verzögert, damit ein generierter Spielzug besser für den Benutzer nachvollziehbar ist. 
+* Die Spielengine wird von mir als immutabel angesehen. 
+  Trotzdem habe ich zweimal ``var`` verwendet. 
+  Bei der Methode `flips()` sollte die Übersichtlichkeit nicht unter dem Zwang der Immutabilität leiden (ich hätte sonst einmal einen dicken `fold` um alle Anweisungen legen müssen).
+  ``hashVal()`` verwendet auch `var`, das liegt in diesem Fall an Performance-Verbesserungen:
+  Der Zustand der aktuellen Rotation/Spiegelung kann abgespeichert werden *und* dient als Vorlage für den nächsten Zustand.
+  
+* Die dargestellte Antwortzeit funktioniert korrekt, die Darstellung wird lediglich immer künstlich um eine gewisse Zeitspanne verzögert, damit ein generierter Spielzug besser für den Benutzer nachvollziehbar ist.
+ 
 * Die Testfälle sind nicht so einfach zu erstellen, da sich das Spielfeld immer dynamisch ändert und ein Zug in mehreren Tiefen für uns Menschen schwer bis unmöglich vorstellbar ist. 
   Eine Darstellung des gesamten Baums ist leider sehr unübersichtlich, weshalb ich mich dagegen entschieden habe, jeden einzelnen Zug darzustellen. 
 

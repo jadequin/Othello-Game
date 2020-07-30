@@ -11,12 +11,12 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
     companion object {
         private const val DEPTH = 4
-        val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
+        private val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
 
         //Descending sorted indices by value for earlier cut offs
-        val ratingIndicesSortedDesc = ratings.indices.sortedByDescending { ratings[it] }
+        private val ratingIndicesSortedDesc = ratings.indices.sortedByDescending { ratings[it] }
 
-        val results = hashMapOf<Othello, Int>()
+        private val results = hashMapOf<Othello, Int>()
 
         fun of(p1: Long, p2: Long, turn: Int): Othello {
             return Othello(listOf(p1, p2), turn, null)
@@ -26,7 +26,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
         /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  DATABASE INIT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-        private val database = File("src/main/kotlin/othello/db.txt")
+        private val database = File("src/main/resources/db.txt")
 
         //read all saved results from DB
         init {
@@ -79,7 +79,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
             prevOthello = this
     )
 
-    fun bestMove(): Othello = listMoves().maxBy { it.alphaBeta() }!!
+    fun bestMove(): Othello = listMoves().shuffled().maxBy { it.alphaBeta() }!!
 
     fun randomMove() = if(isGameOver()) this else nextTurn().listMoves().random()
 
@@ -225,6 +225,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
     //returns 1 if player1 has more disc, -1 if it is player2 or 0 if it is a tie
     override fun result() = (scorePlayer1() - scorePlayer2()).sign
+
 
 
 
