@@ -201,6 +201,9 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  GAME HEURISTICS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+    //http://home.datacomm.ch/t_wolf/tw/misc/reversi/html/index.html
+    //https://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello/
+
     private fun dynamicHeuristic(): Int {
         //1:Coin Parity + 2:Mobility + 3:Corners captured + 4:Stability
         val corners = listOf(0, 7, 56, 63)
