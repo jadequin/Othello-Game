@@ -1,0 +1,71 @@
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.game {
+    position: absolute;
+    top: 4rem;
+    left: 50%;
+    transform: translate(-50%);
+    width: 650px;
+    height: 650px;
+    background: rgb(92, 75, 39);
+    border: 1px solid black;
+    box-shadow: 5px 5px rgba(4, 10, 4, 0.87);
+    padding: 1.5rem;
+}
+
+
+.square {
+    width: 90px;
+    height: 73px;
+    background: rgba(22, 129, 13, 0.87);
+    border: 1px solid black;
+}
+.whiteSquare {
+    width: 90px;
+    height: 73px;
+    background: rgba(22, 129, 13, 0.87);
+    border: 1px solid black;
+    background-image: url("white-circle.png");
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-position: center; /* Center the image */
+    background-size: cover; /* Resize the background image to cover the entire container */
+}
+.blackSquare {
+    width: 90px;
+    height: 73px;
+    background: rgba(22, 129, 13, 0.87);
+    border: 1px solid black;
+    background-image: url("black-circle.png");
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-position: center; /* Center the image */
+    background-size: cover; /* Resize the background image to cover the entire container */
+}
+.whiteSuggSquare {
+    width: 90px;
+    height: 73px;
+    background: rgba(84, 220, 72, 0.87);
+    border: 1px solid black;
+}
+.whiteSuggSquare:hover {
+    background-image: url("white-circle.png");
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-position: center; /* Center the image */
+    background-size: cover; /* Resize the background image to cover the entire container */
+}
+.blackSuggSquare {
+    width: 90px;
+    height: 73px;
+    background: rgba(84, 220, 72, 0.87);
+    border: 1px solid black;
+}
+.blackSuggSquare:hover {
+    background-image: url("black-circle.png");
+    background-repeat: no-repeat; /* Do not repeat the image */
+    background-position: center; /* Center the image */
+    background-size: cover; /* Resize the background image to cover the entire container */
+}
