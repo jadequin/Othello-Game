@@ -5,11 +5,11 @@ class Test {
     /* You can paste in here your Triples received from the Print to console command.
     They will be used to create instances of an Othello board. */
 
-    private val scenario1 = Triple(53429417757163718L, -53429417757163976L, 1) //P1 blocks P2
-    private val scenario2 = Triple(53429417757163718L, -53429417757163976L, 1)
-    private val scenario3 = Triple(53429417757163718L, -53429417757163976L, 1)
-    private val scenario4 = Triple(53429417757163718L, -53429417757163976L, 1)
-    private val scenario5 = Triple(53429417757163718L, -53429417757163976L, 1)
+    private val scenario1 = Triple(25992864229951327L, -4637678882657339360L, 1) //P1 has the chance to win with the next move
+    private val scenario2 = Triple(-510983174747348704L, 150695204540931807L, -1) //P2 has the chance to win within the next two moves
+    private val scenario3 = Triple(74614631758284231L, -74614631758290416L, -1) //P2 can block a risky potential win in 4 moves
+    private val scenario4 = Triple(40541744654237950L, -40682482142593535L, 1) //P1 blocks a potential win for P2
+    private val scenario5 = Triple(0, 0L, 1) //alpha-beta horizon ends with depth 4, so there is no scenario5
 
 
 
@@ -17,7 +17,7 @@ class Test {
 
     // ==================================== TEST LOGIC / DO NOT CHANGE ====================================
 
-    private val scenarios = listOf(scenario1, scenario2, scenario3, scenario4, scenario5)
+    private val scenarios = listOf(scenario1, scenario2, scenario3, scenario4)
 
     init {
         println("----------- TEST MODE START -----------------------------------------------------------------------------------------\n")

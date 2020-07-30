@@ -12,6 +12,12 @@ class App() {
 
     init {
 
+        //Generate a tie
+        othello = Othello().randomGame()
+        while(othello.result() != 0)
+        othello = Othello().randomGame()
+
+
         val app = Javalin.create {config -> config.addStaticFiles("/public")}.start(7070)
 
         app.get("/makeMove"){ ctx ->
@@ -63,8 +69,3 @@ fun main() {
     try { Desktop.getDesktop().browse(URL("http://localhost:7070/").toURI()) } catch (e: Exception) { }
     App()
 }
-
-////Generate a tie
-//othello = Othello().randomGame()
-//while(othello.result() != 0)
-//othello = Othello().randomGame()
