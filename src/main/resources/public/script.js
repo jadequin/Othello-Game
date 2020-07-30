@@ -16,6 +16,9 @@ function sendGET(request) {
 //RECEIVER
 http.onload = function() {
     if (status == 0 || (status >= 200 && status < 400)) {
+
+        end = Date.now()
+
         /*
         Html Response with the following form:
             boardAsHTML###turn###scorePlayer1###scorePlayer2###result
@@ -24,7 +27,7 @@ http.onload = function() {
             <table>...</table###-1###23###41###0
 
          */
-        end = Date.now()
+
         document.getElementById('responseTime').innerText = (end - start).toString()
 
         let elements = this.responseText.split("###")
@@ -55,5 +58,4 @@ http.onload = function() {
 
 function sendMove(request) {
     sendGET(request)
-
 }

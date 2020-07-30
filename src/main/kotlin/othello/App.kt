@@ -51,6 +51,11 @@ class App() {
             println("Current board. Just copy and paste it into a test scenario!\n" + othello.toTriple())
             ctx.result(othello.htmlResponse())
         }
+
+        app.get("/printTests") { ctx ->
+            Test()
+            ctx.result(othello.htmlResponse())
+        }
     }
 }
 
@@ -58,3 +63,8 @@ fun main() {
     try { Desktop.getDesktop().browse(URL("http://localhost:7070/").toURI()) } catch (e: Exception) { }
     App()
 }
+
+////Generate a tie
+//othello = Othello().randomGame()
+//while(othello.result() != 0)
+//othello = Othello().randomGame()

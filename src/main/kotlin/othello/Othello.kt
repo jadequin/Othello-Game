@@ -23,6 +23,8 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
             return Othello(listOf(p1, p2), turn, null)
         }
 
+
+
         /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  DATABASE INIT ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
         private val database = File("src/main/kotlin/othello/db.txt")
@@ -196,6 +198,10 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         return flips
     }
 
+
+    tailrec fun randomGame(it: Othello = this): Othello = if(it.isGameOver()) it else randomGame(it.nextTurn().listMoves().random())
+    tailrec fun perfectGame(it: Othello = this): Othello = if(it.isGameOver()) it else perfectGame(it.nextTurn().bestMove())
+
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  VALIDATION METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
     private fun isMoveAvailable() = (0..63).any { isValidMove(it) }
@@ -203,6 +209,9 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
     private fun isValidMove(pos: Int) = !boardPos(pos) && flips(pos) != 0L
 
     private fun countValidMoves() = (0..63).count { isValidMove(it) }
+
+    fun validPositions() = (0..63).mapNotNull { if(isValidMove(it)) it else null }
+
 
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  GAME STATUS METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
