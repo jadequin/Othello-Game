@@ -81,6 +81,8 @@ Der String ist ein Triple-Objekt, wird in der Konsole ausgegeben und kann in der
     
 <br />
 <br />
+<br />
+<br />
 
 ## Spiel-Engine (ENG)
 
@@ -90,11 +92,267 @@ Umsetzung  | 120 | 100 |  40 | 130 |  100 |
 Gewichtung | 0.4 | 0.3 | 0.3 | 0.3 |  0.3 | 
 Ergebnis   |  48 |  30 |  12 |  39 |   30 | **159%**
 
+<br />
+<br />
 
-#### Einleitung
-Die Engine 
+### Allgemeines
+Die Spiel-Engine befindet sich in der Datei ``Othello.kt``.
+Dort befindet sich ``class Othello``, die das Interface `OthelloGame` implementiert.
+In dieser Implementierung ist eine Spielsituation niemals mutabel.
+Stattdessen wird mit jedem Spielzug eine neue Othello-Instanz erzeugt (Immutabilität).
+
+<br />
+
+#### Konstruktor
+
+```kotlin
+class Othello (
+        private val players: List<Long> = listOf(34628173824L, 68853694464L),
+        private val turn: Int = +1,
+        private val prevOthello: Othello? = null)
+    : OthelloGame
+```
+
+Im Konstruktor der Klasse wird das Bitboard, bestehend aus zwei ``Long``-Werten,
+der aktuell ziehende Spieler als ``Int`` (+1 für Spieler1, -1 für Spieler2) und die
+eventuell vorhandene vorherige Spielsituation als ``Othello`` übergeben. 
+Um einfach ein neues Spielbrett erzeugen zu können, befinden sich die Standard-Werte
+bereits im Konstruktor.
+
+<br />
+
+#### Bitboards
+Das komplette Spiel wird mithilfe von Bitboards dargestellt. 
+Dieses ist auf diese Weise codiert:
+
+```
+| 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  |
+| 8  | 9  | 10 | 11 | 12 | 13 | 14 | 15 |
+| 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 |
+| 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 |
+| 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 |
+| 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 |
+| 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 |
+| 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 |
+```
+
+Mit den Bitboards von beiden Spielern wird durchgehend in mehreren Methoden gearbeitet.
+Jeder Spieler besitzt sein eigenes Bitboard, um alle Informationen darstellen zu können.
+Wenn es um die Belegung einer bestimmten Position auf dem Spielfeld geht, kann man
+sich an den folgenden Lambda-Expressions bedienen 
+(liefern jeweils einen Boolean-Wert mit der Antwort, ob ein Feld besetzt ist).
+
+```kotlin
+private val currentPos = { pos: Int -> players[(-turn + 1).sign] and (1L shl pos) != 0L}
+private val otherPos = {pos: Int -> players[(turn + 1).sign] and (1L shl pos) != 0L}
+```
+
+<br />
+
+####Darstellung
+Um einen Überblick zu erhalten, wie eine aktuelle Spielsituation aussieht,
+kann man sich das Feld auf der Konsole ausgeben lassen. Das geschieht mithilfe der
+``toString()``.
+
+Für die Darstellung im Browser hingegen wird in der Methode ``htmlResponse()``
+eine neue HTML-Tabelle als String zusammengebaut.
+Dieser String kann dann ganz einfach über Javalin weitergeleitet werden.
+Die Verwendung wird im [Abschnitt GUI](#umsetzung-der-gui) erklärt.
+
+<br />
+<br />
+<br />
+<br />
+
+###Hash-Map und Symmetrien
+Um Bewertungen für eine Spielsituation nicht immer von neu berechnen zu müssen, 
+wird eine HashMap verwendet. Diese wird statisch in ``class Othello`` 
+unter den ``companion objects`` gespeichert. Mit Inhalt gefüllt wird diese 
+zum einen durch den Alpha-Beta-Algorithmus, als auch beim Start der Anwendung,
+durch das Auslesen der Datenbank mit Stellungsbewertungen.
+
+Die HashMap wird folgendermaßen abgespeichert:
+```kotlin
+val results = hashMapOf<Othello, Int>()
+```
+
+Die Datenstruktur ist mutabel und lässt sich daher sehr gut um neue Einträge erweitern.
+Da es sich bei dem Key um einen nicht-primitiven Datentyp handelt, muss entsprechend
+die Methode ``equals()`` angepasst werden. Zwei Instanzen von `Othello` sollen genau dann
+gleich sein, wenn der **Hashwert**  der beiden Bitboards miteinander übereinstimmen.
+
+```kotlin
+override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Othello) return false
+    return other.hashValPlayer1() == this.hashValPlayer1() && other.hashValPlayer2() == this.hashValPlayer2()
+}
+```
+
+Der **Hashwert** eines Bitboards ist der *kleinste* Wert aus allen Rotationen
+und Spiegelungen eines Bitboards und wird durch ``hashVal(player: Long)`` generiert.
+Damit wird stets garantiert, dass faktisch 
+identische Spielstellungen nur einmal abgespeichert werden.
+
+Die Rotationen/Spiegelungen geschehen mithilfe von eigens implementierten
+logischen Binäroperationen. Dort befinden sich auch Magic-Numbers, die für
+schnelle ``and`` Operationen gemacht worden sind.
+Eine genauere Erklärung würde hier den Rahmen sprengen, 
+darum verweise ich in diesem Fall einfach auf die [verwendete Quelle](https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating).
 
 
+<br />
+<br />
+<br />
+<br />
+
+###Alpha-Beta-Algorithmus
+Für diese Implementierung wurde ein Alpha-Beta-Algorithmus mit
+der Erweiterung um eine **Negamax-Variante** _und_ einer **Zugsortierung** 
+nach [dieser Vorlage](https://de.wikipedia.org/wiki/Alpha-Beta-Suche) benutzt.
+
+Durch eine Zugsortierung werden zuerst vielversprechende Züge betrachtet,
+die wahrscheinlich einen früheren Cut-Off für den Alpha-Beta bedeuten.
+Sortiert werden die Züge nach den Bewertungen der Positionen (siehe [Heuristische Bewertungsfunktion](#heuristische-bewertungsfunktione)).
+
+Eine Besonderheit in dieser speziellen Umsetzung liegt darin, dass es einen wichtigen
+Seiteneffekt gibt. Sobald eine neue Bewertung für eine Spielsituation (/Knoten) feststeht,
+wird diese umgehend in der statisch zur Klasse zugeordneten HashMap abgespeichert.
+ 
+
+<details>
+    <summary>Durch den Negamax entstand eine sehr knappe Funktion:</summary>
+    
+```kotlin
+    fun alphaBeta(depth: Int = DEPTH, alpha: Int = -Int.MAX_VALUE, beta: Int = Int.MAX_VALUE): Int {
+
+        //look up the table if there is a key with the current setup
+        if(results[this] != null)
+            return results[this]!! * depth
+
+        //maybe there is a result with a swapped key... invert it then
+        if(results[swappedBoard()] != null)
+            return results[this]!! * depth * -1
+
+        if(isGameOver())
+            return result() * depth * 1000 * -turn
+
+        if(!isMoveAvailable())
+            return -switchTurns().alphaBeta(depth, -beta, -alpha)
+
+        if(depth == 0)
+            return dynamicHeuristic() * depth * -turn
+
+        val bestScore = run {
+            listMoves().fold(alpha) {
+                bestScore, move ->
+                val score = -move.alphaBeta(depth - 1, -beta, -bestScore)
+                if(bestScore in beta until score)
+                    return@run bestScore
+                return@fold max(bestScore, score)
+            }
+        }
+
+        results[this] = bestScore
+        //database.appendText("$players;$bestScore\n") //uncomment to save much more results to the database
+        return bestScore
+    }
+```
+</details>
+
+Der Ablauf des Algorithmus:
+1. Gibt es schon einen Eintrag in der HashMap? ⇒  ``return Ergebnis``
+2. Ist ein Endknoten erreicht? ⇒ ``return if(Gewinn für aktuellen Spieler) 1000 else -1000``
+3. Ist kein Spielzug mehr möglich? ⇒ ``return Ergebnis des alphaBeta mit Zugwechsel``
+4. Ist die maximal eingestellte Tiefe erreicht? ⇒ ``return Heuristische Bewertung``
+5. Suche die höchste Bewertung aus den nächsten Kindknoten durch Rekursion
+6. Speichere die beste Bewertung in der HashMap
+7. (optional) Speichere den Zug mit der Bewertung in der Datenbank
+8. ``return Beste Bewertung``
+
+
+<br />
+<br />
+<br />
+<br />
+
+### Heuristische Bewertungsfunktion
+Zu Beginn des Projektes war noch der Plan eine Monte-Carlo-Simulation als Bewertung
+zu implementieren. Diese Idee musste leider in einer späten Phase verworfen werden,
+da die Laufzeitergebnisse sehr schlechte Ergebnisse lieferten.
+Darum wird in dieser Implementierung eine heuristische Funktion als Stellungsbewertung verwendet.
+
+Da es bereits viele Personen gab, die sich um eine geeignete Bewertung viele Gedanken gemacht haben,
+habe ich mich dazu entschlossen [eine davon zu übernehmen](https://github.com/kartikkukreja/blog-codes/blob/master/src/Heuristic%20Function%20for%20Reversi%20(Othello).cpp).
+
+Um eine Spielstellung mitten im Spiel zu bewerten, reicht es nicht aus die Differenz
+der Spielsteine als Bewertung zu nehmen. Ein hoher Anteil an eigenen Steinen kann
+sogar schlecht für den Spieler sein. Deshalb werden auch andere Aspekte betrachtet:
+
+* **Eckfelder**: Die vier Felder in den Ecken sind viel wert, da sie für den Rest des
+  Spiels nicht mehr umgedreht werden können und zusätzlich viele eigene Zugmöglichkeiten
+  ergeben.
+
+* **Mobilität**: Wie bei vielen anderen Brettspielen, ist es wichtig, die Mobilität
+  des Gegners möglichst einzuschränken. Darum erhalten Züge, die viele weitere Folgezüge
+  ermöglichen eine hohe Bewertung.
+  
+* **Spielstein-Parität**: Die Differenz an Spielsteinen wird bewertet,
+    allerdings mit einer vergleichsweise geringen Gewichtung.
+    
+* **Stabilität**: Bestimmte Felder sind stabiler als andere (wie z.B. die Eckfelder), aber auch
+  Felder an der Spielfeldkante entlang. Andererseits gibt es auch sehr schlechte Felder,
+  wie die angrenzenden an den Ecksteinen, da diese für den Gegner eine hoch bewertete Position ermöglichen.
+  Dadurch werden verschiedene Positionen, die im
+  Besitz des ziehenden Spielers sind, unterschiedlich bewertet. 
+  
+  <br />
+  
+| 20  | \-3 | 11  | 8   | 8   | 11  | \-3 | 20  |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| \-3 | \-7 | \-4 | 1   | 1   | \-4 | \-7 | \-3 |
+| 11  | \-4 | 2   | 2   | 2   | 2   | \-4 | 11  |
+| 8   | 1   | 2   | \-3 | \-3 | 2   | 1   | 8   |
+| 8   | 1   | 2   | \-3 | \-3 | 2   | 1   | 8   |
+| 11  | \-4 | 2   | 2   | 2   | 2   | \-4 | 11  |
+| \-3 | \-7 | \-4 | 1   | 1   | \-4 | \-7 | \-3 |
+| 20  | \-3 | 11  | 8   | 8   | 11  | \-3 | 20  |
+
+_Positionsbewertungen nach [dieser Implementierung](https://github.com/kartikkukreja/blog-codes/blob/master/src/Heuristic%20Function%20for%20Reversi%20(Othello).cpp)_
+
+
+<br />
+<br />
+<br />
+<br />
+
+### Eigene Datenbank
+Um Spielstellungen nicht nur flüchtig zu speichern, wurde eine Datenbank implementiert.
+Diese befindet sich unter ``src/main/resources/db.txt``.
+
+#### Auslesen
+Um alle gespeicherten Informationen auszulesen, wird im ``init{ }`` 
+des ``companion object`` einmal jede Zeile ausgelesen, geparst und in der
+HashMap abgespeichert.
+
+Die Datensätze sehen wie folgt aus:
+``[34561328128, 68989485056];0``
+
+Das entspricht: ``[BitboardP1, BitboardP2];Bewertung``
+
+#### Einlesen
+Um die Datenbank zu füllen, kann man einfach die folgende Zeile 
+in der Methode ``alphaBeta()`` aus der Datei ``Othello.kt`` einkommentieren:
+
+```kotlin
+database.appendText("$players;$bestScore\n")
+```
+
+Damit werden weitere neue Einträge an das Ende des Dokumentes angefügt.
+Nur sollte man damit aufpassen, da sehr schnell große Datenmengen anfallen.
+
+<br />
+<br />
 <br />
 <br />
 
@@ -430,6 +688,11 @@ Mithilfe von zwei Variablen, die die Timestamps verwalten, kann dann im Dokument
   
 * Die dargestellte Antwortzeit funktioniert korrekt, die Darstellung wird lediglich immer künstlich um eine gewisse Zeitspanne verzögert, damit ein generierter Spielzug besser für den Benutzer nachvollziehbar ist.
  
+* Es kann sein, dass Berechnungen für einen Spielzug länger als 3 Sekunden dauern.
+  Das ist aber nur der Fall, wenn der Algorithmus einen sehr hartnäckigen Gegner mit
+  sehr guten Spielzügen schlagen muss. Das ist bspw. bei einer Simulation mit ``Computer``
+  gegen ``Computer`` der Fall. Die längsten Zeiten sind in der Mitte des Spiels zu erwarten.
+ 
 * Die Testfälle sind nicht so einfach zu erstellen, da sich das Spielfeld immer dynamisch ändert und ein Zug in mehreren Tiefen für uns Menschen schwer bis unmöglich vorstellbar ist. 
   Eine Darstellung des gesamten Baums ist leider sehr unübersichtlich, weshalb ich mich dagegen entschieden habe, jeden einzelnen Zug darzustellen. 
 
@@ -439,7 +702,7 @@ Mithilfe von zwei Variablen, die die Timestamps verwalten, kann dann im Dokument
 ## Quellennachweis
 
 * [Othello-Heuristiken](http://home.datacomm.ch/t_wolf/tw/misc/reversi/html/index.html)
-* [Heuristik-Implementierung](https://github.com/kartikkukreja/blog-codes/blob/master/src/Heuristic%20Function%20for%20Reversi%20(Othello).cpp)
+* [Heuristik-Implementierung](https://kartikkukreja.wordpress.com/2013/03/30/heuristic-function-for-reversiothello/)
 * [Bitboard - Rotationen und Spiegelungen](https://www.chessprogramming.org/Flipping_Mirroring_and_Rotating)
 * [Spielfeld mit HTML und CSS](https://www.youtube.com/watch?v=Z_IaJQojun8&t=253s)
 * [Alpha-Beta, Negamax, Zugsortierung](https://de.wikipedia.org/wiki/Alpha-Beta-Suche)

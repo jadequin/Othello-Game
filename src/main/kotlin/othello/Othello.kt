@@ -6,17 +6,57 @@ import kotlin.math.min
 import kotlin.math.sign
 
 
-class Othello (private val players: List<Long> = listOf(34628173824L, 68853694464L), private val turn: Int = +1, private val prevOthello: Othello? = null): OthelloGame {
+/*
+    ---Code of start positions---
+
+    34628173824L:
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+    68853694464L:
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+    | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+ */
+
+class Othello (
+        private val players: List<Long> = listOf(34628173824L, 68853694464L),
+        private val turn: Int = +1,
+        private val prevOthello: Othello? = null)
+    : OthelloGame {
 
 
     companion object {
         private const val DEPTH = 4
         private val BOARD_INDICES = 0..63
-        private val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
 
-        //Descending sorted indices by value for earlier cut offs
+        //ratings for all positions (used by the heuristics function)
+        private val ratings = listOf(
+                20, -3, 11,  8,  8, 11, -3, 20,
+                -3, -7, -4,  1,  1, -4, -7, -3,
+                11, -4,  2,  2,  2,  2, -4, 11,
+                 8,  1,  2, -3, -3,  2,  1,  8,
+                 8,  1,  2, -3, -3,  2,  1,  8,
+                11, -4,  2,  2,  2,  2, -4, 11,
+                -3, -7, -4,  1,  1, -4, -7, -3,
+                20, -3, 11,  8,  8, 11, -3, 20
+        )
+
+        //Descending sorted indices by value for earlier cut offs in alpha-beta-algorithm
         private val ratingIndicesSortedDesc = ratings.indices.sortedByDescending { ratings[it] }
 
+        //hashMap of all known game states and their results
         private val results = hashMapOf<Othello, Int>()
 
         fun of(p1: Long, p2: Long, turn: Int): Othello {
