@@ -11,6 +11,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
     companion object {
         private const val DEPTH = 4
+        private val BOARD_INDICES = 0..63
         private val ratings = listOf(20, -3, 11, 8, 8, 11, -3, 20, -3, -7, -4, 1, 1, -4, -7, -3, 11, -4, 2, 2, 2, 2, -4, 11, 8, 1, 2, -3, -3, 2, 1, 8 , 8, 1, 2, -3, -3, 2, 1, 8, 11, -4, 2, 2, 2, 2, -4, 11, -3, -7, -4, 1, 1, -4, -7, -3,20, -3, 11, 8, 8, 11, -3, 20)
 
         //Descending sorted indices by value for earlier cut offs
@@ -83,7 +84,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
     fun randomMove() = if(isGameOver()) this else nextTurn().listMoves().random()
 
-    override fun undo(): Othello = if(prevOthello == null) this else prevOthello
+    override fun undo(): Othello = prevOthello ?: this
 
     fun nextTurn() = if (!isMoveAvailable()) switchTurns() else this
 
@@ -137,60 +138,52 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         //diagonal /up
         if(pos/8 > 1 && pos%8 < 6 && otherPos(pos-7))
         {
-            var i = pos-14
-            while(i > 7 && i%8 < 7) {
-                if(!boardPos(i))
+            for(i in pos-14 downTo Int.MIN_VALUE step 7) {
+                if(!boardPos(i) || !(i > 7 && i%8 < 7))
                     break
                 if(currentPos(i)) {
                     (i+7..pos-7 step 7).forEach {flips = flips or (1L shl it) }
                     break
                 }
-                i -=7
             }
         }
 
         //diagonal \up
         if(pos/8 > 1 && pos%8 > 1 && otherPos(pos-9))
         {
-            var i = pos-18
-            while(i > 7 && i%8 > 0) {
-                if(!boardPos(i))
+            for(i in pos-18 downTo Int.MIN_VALUE step 9) {
+                if(!boardPos(i) || !(i > 7 && i%8 > 0))
                     break
                 if(currentPos(i)) {
                     (i+9..pos-9 step 9).forEach { flips = flips or (1L shl it)}
                     break
                 }
-                i -= 9
             }
         }
 
         //diagonal /down
         if(pos/8 < 6 && pos%8 > 1 && otherPos(pos+7))
         {
-            var i = pos+14
-            while(i < 56 && i%8 > 0) {
-                if(!boardPos(i))
+            for(i in pos+14 .. Int.MAX_VALUE step 7) {
+                if(!boardPos(i) || !(i < 56 && i%8 > 0))
                     break
                 if(currentPos(i)) {
                     (pos+7..i-7 step 7).forEach { flips = flips or (1L shl it)}
                     break
                 }
-                i += 7
             }
         }
 
         //diagonal \down
         if(pos/8 <6 && pos%8 <6 && otherPos(pos+9))
         {
-            var i = pos+18
-            while(i < 56 && i%8 < 7) {
-                if(!boardPos(i))
+            for(i in pos+18..Int.MAX_VALUE step 9) {
+                if(!boardPos(i) || !(i < 56 && i%8 < 7))
                     break
                 if(currentPos(i)) {
                     (pos+9..i-9 step 9).forEach { flips = flips or (1L shl it) }
                     break
                 }
-                i += 9
             }
         }
 
@@ -203,13 +196,13 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
     /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  VALIDATION METHODS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-    private fun isMoveAvailable() = (0..63).any { isValidMove(it) }
+    private fun isMoveAvailable() = BOARD_INDICES.any { isValidMove(it) }
 
     private fun isValidMove(pos: Int) = !boardPos(pos) && flips(pos) != 0L
 
-    private fun countValidMoves() = (0..63).count { isValidMove(it) }
+    private fun countValidMoves() = BOARD_INDICES.count { isValidMove(it) }
 
-    fun validPositions() = (0..63).mapNotNull { if(isValidMove(it)) it else null }
+    fun validPositions() = BOARD_INDICES.mapNotNull { if(isValidMove(it)) it else null }
 
 
 
@@ -220,8 +213,8 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
 
     override fun isPlayer1Turn() = turn == 1
 
-    override fun scorePlayer1() = (0..63).count { players[0] and (1L shl it) != 0L }
-    override fun scorePlayer2() = (0..63).count { players[1] and (1L shl it) != 0L }
+    override fun scorePlayer1() = BOARD_INDICES.count { players[0] and (1L shl it) != 0L }
+    override fun scorePlayer2() = BOARD_INDICES.count { players[1] and (1L shl it) != 0L }
 
     //returns 1 if player1 has more disc, -1 if it is player2 or 0 if it is a tie
     override fun result() = (scorePlayer1() - scorePlayer2()).sign
@@ -249,11 +242,11 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         val mobilityVal = if(myMobility > oppMobility) (100.0 * myMobility)/(myMobility + oppMobility) else if(myMobility < oppMobility) -(100.0 * oppMobility)/(myMobility + oppMobility) else 0.0
 
         //STABILITY
-        val pieceRating = (0..63).sumBy { if(currentPos(it)) ratings[it] else if(otherPos(it)) -ratings[it] else 0 }
+        val pieceRating = BOARD_INDICES.sumBy { if(currentPos(it)) ratings[it] else if(otherPos(it)) -ratings[it] else 0 }
 
         //COIN PARITY
-        val myPieces = (0..63).count { currentPos(it) }
-        val oppPieces = (0..63).count { otherPos(it) }
+        val myPieces = BOARD_INDICES.count { currentPos(it) }
+        val oppPieces = BOARD_INDICES.count { otherPos(it) }
         val pieceDifference = if(myPieces > oppPieces) (100.0 * myPieces)/(myPieces + oppPieces) else if(myPieces < oppPieces) -(100.0 * oppPieces)/(myPieces + oppPieces) else 0.0
 
         //WEIGHTED SCORE
@@ -296,7 +289,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         }
 
         results[this] = bestScore
-        //database.appendText("$players;$bestScore\n") //uncomment to save more results to the database
+        //database.appendText("$players;$bestScore\n") //uncomment to save much more results to the database
         return bestScore
     }
 
@@ -378,7 +371,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
     }
 
     override fun toString(): String {
-        return (0..63).joinToString(prefix = "-".repeat(33) + "\n|", postfix = "|\n" + "-".repeat(33), separator = "|") {
+        return BOARD_INDICES.joinToString(prefix = "-".repeat(33) + "\n|", postfix = "|\n" + "-".repeat(33), separator = "|") {
             (if(it != 0 && it%8==0) "\n|" else "") + (if(players[0] shr it and 1L == 1L) " X " else if(players[1] shr it and 1L == 1L) " O " else "%3d".format(it))
         }
     }
@@ -395,7 +388,7 @@ class Othello (private val players: List<Long> = listOf(34628173824L, 6885369446
         <table>...</table###-1###23###41###0
     */
     fun htmlResponse(): String {
-            return (0..63).joinToString(separator = "", prefix = "<table>", postfix = "</table>") {
+            return BOARD_INDICES.joinToString(separator = "", prefix = "<table>", postfix = "</table>") {
                 (if(it%8==0 && it != 0) "</tr>" else "") +
                         (if(it%8==0) "<tr>" else "") +
                         "<td class='" +
