@@ -95,51 +95,60 @@
     </table>
 </div>
 
-<!--- Option buttons for new game --->
-Player 1:
-<input type="radio" id="p1Computer" name="first" onclick="sendGET('state')">
-<label for="p1Computer">Computer</label>
-<input type="radio" id="p1Human" name="first" onclick="sendGET('state')" checked>
-<label for="p1Human">Human</label>
-<input type="radio" id="p1Random" name="first" onclick="sendGET('state')">
-<label for="p1Random">Random</label>
-<br>
-<br>
-Player 2:
-<input type="radio" id="p2Computer" name="second" onclick="sendGET('state')" checked>
-<label for="p2Computer">Computer</label>
-<input type="radio" id="p2Human" name="second" onclick="sendGET('state')">
-<label for="p2Human">Human</label>
-<input type="radio" id="p2Random" name="second" onclick="sendGET('state')">
-<label for="p2Random">Random</label>
-
-<!--- Buttons --->
-<br><br>
-<button onclick="sendGET('newGame')">New Game</button>
-<br><br><br><br>
-<button onclick="sendGET('bestMove')">Best Move</button>
-<button onclick="sendGET('randomMove')">Random Move</button>
-<button onclick="sendGET('undo')">Undo</button>
-<br><br>
-<br><br>
-<button onclick="sendGET('printToConsole')">Export board to console</button>
-<br><br>
-<button onclick="sendGET('printTests')">Print tests to console</button>
 
 
-<br><br>
+<div class="menu" id="menu">
+    <!--- Option buttons for new game --->
+    Player 1:
+    <input type="radio" id="p1Computer" name="first" onclick="sendGET('state')">
+    <label for="p1Computer">Computer</label>
+    <input type="radio" id="p1Human" name="first" onclick="sendGET('state')" checked>
+    <label for="p1Human">Human</label>
+    <input type="radio" id="p1Random" name="first" onclick="sendGET('state')">
+    <label for="p1Random">Random</label>
 
-<!--- Some information about the game state --->
-Score P1: <label id="scoreP1">0</label>
-<br>
-Score P2: <label id="scoreP2">0</label>
-<br><br>
-Turn: <label id="turn"></label>
-<br><br>
-<label id="win"></label>
-<br><br><br>
-Last response time: <label id="responseTime"></label> ms
+    <br>
+    <br>
 
+    Player 2:
+    <input type="radio" id="p2Computer" name="second" onclick="sendGET('state')" checked>
+    <label for="p2Computer">Computer</label>
+    <input type="radio" id="p2Human" name="second" onclick="sendGET('state')">
+    <label for="p2Human">Human</label>
+    <input type="radio" id="p2Random" name="second" onclick="sendGET('state')">
+    <label for="p2Random">Random</label>
+
+
+
+    <!--- Buttons --->
+    <br><br>
+    <button onclick="sendGET('newGame')">New Game</button>
+    <br><br><br><br>
+    <button onclick="sendGET('bestMove')">Best Move</button>
+    <button onclick="sendGET('randomMove')">Random Move</button>
+    <button onclick="sendGET('undo')">Undo</button>
+
+    <br><br>
+    <br><br>
+
+    <button onclick="sendGET('printToConsole')">Export board to console</button>
+    <button onclick="sendGET('printTests')">Print all tests to console</button>
+
+
+    <br><br>
+    <br><br>
+
+    <p style="font-size:20px;">
+        <!--- Some information about the game state --->
+        Score: <label id="scoreP1">0</label> - <label id="scoreP2">0</label>
+        <br><br>
+        Turn: <label id="turn"></label>
+        <br><br>
+        <label id="win"></label>
+        <br><br><br>
+        Last response time: <label id="responseTime"></label> ms
+    </p>
+</div>
 
 <script src="script.js"></script>
 </body>

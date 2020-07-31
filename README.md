@@ -5,9 +5,40 @@ Autor: Till Nitsche, 5197769
 Ich habe die Zulassung für PiS im SoSe 2020 bei Herrn Herzberg erhalten.
 
 # Inhaltsverzeichnis
-1. [Einleitung](#einleitung)
-    1. [Spielregeln](#spielregeln)
-    <Noch TOC-Addon herunterladen...>
+
+<!-- vscode-markdown-toc -->
+* 1. [Einleitung](#Einleitung)
+	* 1.1. [Spielregeln](#Spielregeln)
+	* 1.2. [Bedienungsanleitung](#Bedienungsanleitung)
+	* 1.3. [Dateiübersicht](#Dateibersicht)
+* 2. [Spiel-Engine (ENG)](#Spiel-EngineENG)
+	* 2.1. [Allgemeines](#Allgemeines)
+		* 2.1.1. [Konstruktor](#Konstruktor)
+		* 2.1.2. [Bitboards](#Bitboards)
+		* 2.1.3. [Darstellung](#Darstellung)
+	* 2.2. [Hash-Map und Symmetrien](#Hash-MapundSymmetrien)
+	* 2.3. [Alpha-Beta-Algorithmus](#Alpha-Beta-Algorithmus)
+	* 2.4. [Heuristische Bewertungsfunktion](#HeuristischeBewertungsfunktion)
+	* 2.5. [Eigene Datenbank](#EigeneDatenbank)
+		* 2.5.1. [Auslesen](#Auslesen)
+		* 2.5.2. [Einlesen](#Einlesen)
+* 3. [Tests (TST)](#TestsTST)
+* 4. [Umsetzung der GUI](#UmsetzungderGUI)
+	* 4.1. [HTML](#HTML)
+	* 4.2. [CSS](#CSS)
+	* 4.3. [Javascript](#Javascript)
+		* 4.3.1. [Kommunikation](#Kommunikation)
+		* 4.3.2. [Automatische Züge](#AutomatischeZge)
+		* 4.3.3. [Interaktion während automatischen Zügen](#InteraktionwhrendautomatischenZgen)
+		* 4.3.4. [Zeitmessung](#Zeitmessung)
+* 5. [Hinweise](#Hinweise)
+* 6. [Quellennachweis](#Quellennachweis)
+
+<!-- vscode-markdown-toc-config
+	numbering=true
+	autoSave=true
+	/vscode-markdown-toc-config -->
+<!-- /vscode-markdown-toc -->
 
 
 ## Einleitung
@@ -149,7 +180,7 @@ private val otherPos = {pos: Int -> players[(turn + 1).sign] and (1L shl pos) !=
 
 <br />
 
-####Darstellung
+#### Darstellung
 Um einen Überblick zu erhalten, wie eine aktuelle Spielsituation aussieht,
 kann man sich das Feld auf der Konsole ausgeben lassen. Das geschieht mithilfe der
 ``toString()``.
@@ -206,7 +237,7 @@ darum verweise ich in diesem Fall einfach auf die [verwendete Quelle](https://ww
 <br />
 <br />
 
-###Alpha-Beta-Algorithmus
+### Alpha-Beta-Algorithmus
 Für diese Implementierung wurde ein Alpha-Beta-Algorithmus mit
 der Erweiterung um eine **Negamax-Variante** _und_ einer **Zugsortierung** 
 nach [dieser Vorlage](https://de.wikipedia.org/wiki/Alpha-Beta-Suche) benutzt.

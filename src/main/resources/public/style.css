@@ -1,8 +1,14 @@
 
 *{
     margin: 0;
-    padding: 0;
+    padding: 5px;
     box-sizing: border-box;
+}
+
+.menu {
+    border: 1px solid black;
+    width: 400px;
+    height: 600px;
 }
 
 .game {
